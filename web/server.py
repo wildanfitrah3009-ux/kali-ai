@@ -1,10 +1,17 @@
 import os
 import re
+import sys
 import json
 import html
 import asyncio
 import httpx
 import socket
+
+# Pastikan folder 'web' ada di sys.path agar modul lokal (features, auth, tools, exporters)
+# bisa diimpor baik saat dijalankan sebagai 'web.server:app' maupun dari dalam folder web.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
 
 # Paksa gunakan DNS publik (Cloudflare & Google) untuk menembus blokir DNS lokal
 custom_resolver = httpx.AsyncHTTPTransport(retries=2)
