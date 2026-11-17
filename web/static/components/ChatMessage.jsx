@@ -204,18 +204,38 @@ function FormattedContent({ content, onOpenInCanvas }) {
     <div>
       <div 
         ref={containerRef}
-        className="prose prose-sm dark:prose-invert max-w-none break-words prose-table:w-full prose-table:text-xs prose-pre:overflow-x-auto prose-headings:scroll-mt-16"
+        className="prose prose-sm dark:prose-invert max-w-none break-words prose-p:my-1.5 prose-ul:my-1.5 prose-ol:my-1.5 prose-li:my-0.5 prose-headings:mt-3 prose-headings:mb-1.5 prose-pre:my-2 prose-table:w-full prose-table:text-xs prose-pre:overflow-x-auto prose-headings:scroll-mt-16"
         dangerouslySetInnerHTML={{ __html: html }} 
       />
-      {artifactText && onOpenInCanvas && (
-        <button
-          type="button"
-          onClick={() => onOpenInCanvas(artifactText)}
-          className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors"
-        >
-          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
-          Buka Dokumen Word
-        </button>
+      {artifactText && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {onOpenInCanvas && (
+            <button
+              type="button"
+              onClick={() => onOpenInCanvas(artifactText)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-accent/30 bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+              Buka di Canvas
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              const blob = new Blob([artifactText], { type: 'text/plain;charset=utf-8' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'dokumen-kali.txt';
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-muted hover:text-ink hover:bg-hover text-xs font-medium transition-colors"
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+            Unduh
+          </button>
+        </div>
       )}
     </div>
   );
