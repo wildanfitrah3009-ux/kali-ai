@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kali AI - Workspace</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100' height='100' rx='24' fill='%231D4ED8' /%3E%3Cpath d='M62.5 24H42C30.4 24 21 33.4 21 45C21 52.5 25 59 31 62.5L50 78C56.5 83 65 79 65 71C65 67 62.5 63 58 60L42 48.5C39 46.5 39 42 42 40C44 38.5 46.5 38.5 48.5 40L62.5 51C67 54.5 74 52 74 46V35C74 29 69 24 62.5 24Z' fill='white' /%3E%3C/svg%3E" />
+
+  <!-- Markdown & Syntax Highlighting -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '[data-theme="dark"]']
+    }
+  </script>
+  <script src="/static/tailwind-config.js"></script>
+
+  <!-- Design Tokens: Anti-UI-Slop Clean Tonal -->
+  <style>
+    :root {
+      --bg-surface: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-sidebar: #F1F5F9;
+      --bg-hover: #E2E8F0;
+      --border-color: #E2E8F0;
+      --text-main: #0F172A;
+      --text-secondary: #64748B;
+      --primary: #1D4ED8;
+      --primary-hover: #1E40AF;
+      --primary-bg: #EFF6FF;
+    }
+
+    [data-theme="light"] {
+      --bg-surface: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-sidebar: #F1F5F9;
+      --bg-hover: #E2E8F0;
+      --border-color: #E2E8F0;
+      --text-main: #0F172A;
+      --text-secondary: #64748B;
+      --primary: #1D4ED8;
+      --primary-hover: #1E40AF;
+      --primary-bg: #EFF6FF;
+    }
+
+    [data-theme="dark"] {
+      --bg-surface: #0F1115;
+      --bg-card: #16181D;
+      --bg-sidebar: #111318;
+      --bg-hover: #22252D;
+      --border-color: #2A2D34;
+      --text-main: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --primary: #60A5FA;
+      --primary-hover: #93C5FD;
+      --primary-bg: #1E3A8A;
+    }
+
+    * { box-sizing: border-box; }
+    html, body, #root { height: 100%; width: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg-surface);
+      color: var(--text-main);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    code, pre { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+    /* Styling untuk blok kode Markdown */
+    pre {
+      background-color: #0d1117 !important;
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    pre code {
+      background-color: transparent !important;
+      padding: 0 !important;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Styling untuk teks tebal, miring, dan daftar */
+    .prose strong { font-weight: 600; color: var(--text-main); }
+    .prose ul { list-style-type: disc; padding-left: 20px; margin: 8px 0; }
+    .prose ol { list-style-type: decimal; padding-left: 20px; margin: 8px 0; }
+    .prose p { margin-bottom: 8px; }
+
+    /* Styling untuk blok kode Markdown */
+    pre {
+      background-color: #0d1117 !important;
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    pre code {
+      background-color: transparent !important;
+      padding: 0 !important;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Styling untuk teks tebal, miring, dan daftar */
+    .prose strong { font-weight: 600; color: var(--text-main); }
+    .prose ul { list-style-type: disc; padding-left: 20px; margin: 8px 0; }
+    .prose ol { list-style-type: decimal; padding-left: 20px; margin: 8px 0; }
+    .prose p { margin-bottom: 8px; }
+
+    /* Subtle mesh gradient for light mode */
+    .bg-mesh-light {
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(239, 246, 255, 0.5) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(241, 245, 249, 0.5) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(239, 246, 255, 0.5) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(241, 245, 249, 0.5) 0px, transparent 50%);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 18 UMD -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel Standalone -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Mock data & i18n -->
+  <script type="text/babel" src="/static/i18n.js?v=21"></script>
+  <script type="text/babel" src="/static/mockData.js?v=2"></script>
+
+  <!-- Components -->
+  <script type="text/babel" src="/static/components/Logo.jsx?v=6"></script>
+  <script type="text/babel" src="/static/components/LandingView.jsx?v=38"></script>
+  <script type="text/babel" src="/static/components/Header.jsx?v=22"></script>
+  <script type="text/babel" src="/static/components/Sidebar.jsx?v=18"></script>
+  <script type="text/babel" src="/static/components/ZeroState.jsx?v=18"></script>
+  <script type="text/babel" src="/static/components/ChatMessage.jsx?v=8"></script>
+  <script type="text/babel" src="/static/components/PromptInputBox.jsx?v=34"></script>
+  <script type="text/babel" src="/static/components/CanvasWorkspace.jsx?v=4"></script>
+  <script type="text/babel" src="/static/components/PersonaModal.jsx?v=2"></script>
+  <script type="text/babel" src="/static/components/SettingsModal.jsx?v=21"></script>
+  <script type="text/babel" src="/static/components/GeminiLiveOverlay.jsx?v=2"></script>
+
+  <!-- Main App -->
+  <script type="text/babel" src="/static/App.jsx?v=30"></script>
+
+  <!-- Bootstrap -->
+  <script type="text/babel">
+    (function mount() {
+      const rootEl = document.getElementById('root');
+      if (!window.KalaAiComponents || !window.KalaAiComponents.Header) {
+        rootEl.innerHTML =
+          '<div style="padding:24px;font-family:monospace;color:#e55">Gagal memuat komponen. Periksa konsol browser.</div>';
+        return;
+      }
+      const AppComponent = window.App || (typeof App !== 'undefined' ? App : null);
+      if (!AppComponent) {
+        rootEl.innerHTML =
+          '<div style="padding:24px;font-family:monospace;color:#e55">Gagal memuat App.jsx.</div>';
+        return;
+      }
+      const root = ReactDOM.createRoot(rootEl);
+      root.render(React.createElement(AppComponent));
+    })();
+  </script>
+</body>
+</html>
