@@ -132,7 +132,7 @@ window.KalaAiComponents.Sidebar = function Sidebar({
   );
 };
 
-function ConvoRow({ convo, active, onSelect, onTogglePin, onDelete }) {
+const ConvoRow = React.memo(function ConvoRow({ convo, active, onSelect, onTogglePin, onDelete }) {
   const { useState } = React;
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -168,4 +168,4 @@ function ConvoRow({ convo, active, onSelect, onTogglePin, onDelete }) {
       </div>
     </div>
   );
-}
+}, (prev, next) => prev.convo === next.convo && prev.active === next.active);

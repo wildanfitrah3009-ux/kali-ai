@@ -86,11 +86,13 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
     }
   };
   const handleDownload = () => {
+    // Gunakan HTML hasil render markdown (aman & rapi), fallback ke escape teks
+    const bodyHtml = renderedHtml || (content || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
     const htmlContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head><meta charset='utf-8'><title>Dokumen Kali AI</title></head>
       <body style="font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5;">
-        ${(content || '').replace(/\n/g, '<br>')}
+        ${bodyHtml}
       </body></html>
     `;
     const blob = new Blob(['\ufeff', htmlContent], {

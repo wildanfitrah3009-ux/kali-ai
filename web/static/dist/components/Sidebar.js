@@ -216,7 +216,7 @@ window.KalaAiComponents.Sidebar = function Sidebar({
     }, void 0, true)]
   }, void 0, true);
 };
-function ConvoRow({
+const ConvoRow = React.memo(function ConvoRow({
   convo,
   active,
   onSelect,
@@ -312,4 +312,4 @@ function ConvoRow({
       }, void 0, true)]
     }, void 0, true)]
   }, void 0, true);
-}
+}, (prev, next) => prev.convo === next.convo && prev.active === next.active);
