@@ -8,9 +8,16 @@ window.KalaAiComponents.PersonaModal = function PersonaModal({
   onAddGem,
   onDeleteGem,
 }) {
-  const { useState } = React;
+  const { useState, useEffect } = React;
   const [name, setName] = useState('');
   const [instruction, setInstruction] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

@@ -10,9 +10,16 @@ window.KalaAiComponents.SettingsModal = function SettingsModal({
   language,
   onSetLanguage,
 }) {
-  const { useState } = React;
+  const { useState, useEffect } = React;
   const [activeTab, setActiveTab] = useState('general');
   const t = (k) => (window.getKaliText ? window.getKaliText(k, language) : k);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
