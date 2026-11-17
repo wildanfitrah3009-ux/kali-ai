@@ -234,6 +234,20 @@ function App() {
       let buffer = '';
       let done = false;
 
+      // Buffer token & flush berkala (~50ms) untuk mencegah re-render per token
+      let pending = '';
+      let flushTimer = null;
+      const flush = () => {
+        if (!pending) return;
+        const chunk = pending;
+        pending = '';
+        patch((m) => ({ ...m, status: null, content: (m.content || '') + chunk }));
+      };
+      const scheduleFlush = () => {
+        if (flushTimer) return;
+        flushTimer = setTimeout(() => { flushTimer = null; flush(); }, 50);
+      };
+
       const handleEvent = (part) => {
         const lines = part.split('\n');
         for (const line of lines) {
@@ -244,10 +258,10 @@ function App() {
           if (data === '[DONE]') { done = true; return; }
           let obj;
           try { obj = JSON.parse(data); } catch (e) { continue; }
-          if (obj.error) { patch((m) => ({ ...m, status: null, error: obj.error, streaming: false })); done = true; return; }
+          if (obj.error) { flush(); patch((m) => ({ ...m, status: null, error: obj.error, streaming: false })); done = true; return; }
           if (obj.status) patch((m) => ({ ...m, status: obj.status }));
           if (obj.sources) patch((m) => ({ ...m, sources: obj.sources }));
-          if (obj.delta) patch((m) => ({ ...m, status: null, content: (m.content || '') + obj.delta }));
+          if (obj.delta) { pending += obj.delta; scheduleFlush(); }
         }
       };
 
@@ -268,6 +282,8 @@ function App() {
         }
       }
 
+      if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+      flush();
       patch((m) => ({ ...m, status: null, streaming: false }));
     } catch (err) {
       if (err && err.name === 'AbortError') {
@@ -348,11 +364,28 @@ function App() {
   const handleRemoveAttachment = (idx) => setAttachments((prev) => prev.filter((_, i) => i !== idx));
 
   const messagesEndRef = useRef(null);
+  const nearBottomRef = useRef(true);
+  const scrollTimerRef = useRef(null);
+
   useEffect(() => {
-    if (messagesEndRef.current && messagesEndRef.current.scrollIntoView) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
+    // Auto-scroll hanya saat sudah/dekat dasar, dan di-throttle, tanpa smooth berulang
+    if (!nearBottomRef.current) return;
+    if (scrollTimerRef.current) return;
+    scrollTimerRef.current = setTimeout(() => {
+      scrollTimerRef.current = null;
+      const el = messagesEndRef.current;
+      if (el && el.scrollIntoView && nearBottomRef.current) {
+        el.scrollIntoView({ block: 'end' }); // instan, hemat
+      }
+    }, 60);
   }, [messages]);
+
+  useEffect(() => () => { if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current); }, []);
+
+  const handleChatScroll = (e) => {
+    const el = e.currentTarget;
+    nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
 
   if (!Header || !Sidebar || !ZeroState || !ChatMessage || !PromptInputBox || !CanvasWorkspace || !PersonaModal || !KalaAiLiveOverlay || !LandingView) {
     return (
@@ -443,7 +476,7 @@ function App() {
                   </div>
                 ) : (
                   <>
-                    <div className="flex-1 min-h-0 overflow-y-auto">
+                    <div className="flex-1 min-h-0 overflow-y-auto chat-scroll" onScroll={handleChatScroll}>
                       <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
                         {messages.map((m) => (
                           <ChatMessage key={m.id} message={m} onRegenerate={m.role === 'assistant' ? () => handleRegenerate(m.id) : null} onOpenInCanvas={handleOpenInCanvas} onCopy={() => setToast('Disalin ke clipboard')} />

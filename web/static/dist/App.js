@@ -290,6 +290,27 @@ function App() {
       const decoder = new TextDecoder();
       let buffer = '';
       let done = false;
+
+      // Buffer token & flush berkala (~50ms) untuk mencegah re-render per token
+      let pending = '';
+      let flushTimer = null;
+      const flush = () => {
+        if (!pending) return;
+        const chunk = pending;
+        pending = '';
+        patch(m => ({
+          ...m,
+          status: null,
+          content: (m.content || '') + chunk
+        }));
+      };
+      const scheduleFlush = () => {
+        if (flushTimer) return;
+        flushTimer = setTimeout(() => {
+          flushTimer = null;
+          flush();
+        }, 50);
+      };
       const handleEvent = part => {
         const lines = part.split('\n');
         for (const line of lines) {
@@ -308,6 +329,7 @@ function App() {
             continue;
           }
           if (obj.error) {
+            flush();
             patch(m => ({
               ...m,
               status: null,
@@ -325,11 +347,10 @@ function App() {
             ...m,
             sources: obj.sources
           }));
-          if (obj.delta) patch(m => ({
-            ...m,
-            status: null,
-            content: (m.content || '') + obj.delta
-          }));
+          if (obj.delta) {
+            pending += obj.delta;
+            scheduleFlush();
+          }
         }
       };
       while (!done) {
@@ -353,6 +374,11 @@ function App() {
           if (done) break;
         }
       }
+      if (flushTimer) {
+        clearTimeout(flushTimer);
+        flushTimer = null;
+      }
+      flush();
       patch(m => ({
         ...m,
         status: null,
@@ -445,14 +471,29 @@ function App() {
   const handleAddAttachment = att => setAttachments(prev => [...prev, att]);
   const handleRemoveAttachment = idx => setAttachments(prev => prev.filter((_, i) => i !== idx));
   const messagesEndRef = useRef(null);
+  const nearBottomRef = useRef(true);
+  const scrollTimerRef = useRef(null);
   useEffect(() => {
-    if (messagesEndRef.current && messagesEndRef.current.scrollIntoView) {
-      messagesEndRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end'
-      });
-    }
+    // Auto-scroll hanya saat sudah/dekat dasar, dan di-throttle, tanpa smooth berulang
+    if (!nearBottomRef.current) return;
+    if (scrollTimerRef.current) return;
+    scrollTimerRef.current = setTimeout(() => {
+      scrollTimerRef.current = null;
+      const el = messagesEndRef.current;
+      if (el && el.scrollIntoView && nearBottomRef.current) {
+        el.scrollIntoView({
+          block: 'end'
+        }); // instan, hemat
+      }
+    }, 60);
   }, [messages]);
+  useEffect(() => () => {
+    if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+  }, []);
+  const handleChatScroll = e => {
+    const el = e.currentTarget;
+    nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
   if (!Header || !Sidebar || !ZeroState || !ChatMessage || !PromptInputBox || !CanvasWorkspace || !PersonaModal || !KalaAiLiveOverlay || !LandingView) {
     return /*#__PURE__*/_jsxDEV("div", {
       className: "min-h-screen flex items-center justify-center bg-surface text-ink",
@@ -543,7 +584,8 @@ function App() {
               }, void 0, false)
             }, void 0, false) : /*#__PURE__*/_jsxDEV(_Fragment, {
               children: [/*#__PURE__*/_jsxDEV("div", {
-                className: "flex-1 min-h-0 overflow-y-auto",
+                className: "flex-1 min-h-0 overflow-y-auto chat-scroll",
+                onScroll: handleChatScroll,
                 children: /*#__PURE__*/_jsxDEV("div", {
                   className: "max-w-3xl mx-auto w-full px-4 py-6 space-y-6",
                   children: [messages.map(m => /*#__PURE__*/_jsxDEV(ChatMessage, {
