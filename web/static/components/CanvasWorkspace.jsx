@@ -2,6 +2,7 @@
 window.KalaAiComponents = window.KalaAiComponents || {};
 
 window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
+  language,
   isOpen,
   content,
   onChangeContent,
@@ -9,17 +10,39 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
   onSendToChat,
 }) {
   const { useState, useMemo, useRef, useEffect } = React;
-  const [tab, setTab] = useState('editor'); // 'editor' | 'preview'
+  const [tab, setTab] = useState('preview'); // 'editor' | 'preview' (default pratinjau agar Markdown rapi)
   const [copied, setCopied] = useState(false);
   const [sent, setSent] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const previewRef = useRef(null);
 
+  const stripWrapperFence = (raw) => {
+    // Jika seluruh konten dibungkus satu blok kode ```...```, buka pembungkusnya
+    // agar Markdown (heading, bold, list) dirender sebagai format asli.
+    const s = (raw || '').trim();
+    const m = s.match(/^```[\w-]*\n([\s\S]*?)\n```$/);
+    return m ? m[1] : raw;
+  };
+
   const renderedHtml = useMemo(() => {
-    const text = content || '';
+    const text = stripWrapperFence(content || '');
     if (!text) return '';
-    if (!window.marked) return text;
+    const parse = (t, o) => {
+      const m = window.marked;
+      if (!m) return null;
+      try {
+        if (typeof m === 'function') return m(t, o);
+        if (typeof m.parse === 'function') return m.parse(t, o);
+      } catch (e) { return null; }
+      return null;
+    };
+    const parsed = parse(text, { breaks: true });
+    if (parsed == null) {
+      // Fallback: escape agar tidak menampilkan tag mentah, tapi tetap rapi.
+      return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br/>');
+    }
     try {
-      const rawHtml = window.marked.parse(text, { breaks: true });
+      const rawHtml = parsed;
       const parser = new DOMParser();
       const doc = parser.parseFromString(rawHtml, 'text/html');
       doc.querySelectorAll('pre code').forEach((block) => {
@@ -38,6 +61,8 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
     const pres = previewRef.current.querySelectorAll('pre');
     pres.forEach((pre) => {
       if (pre.querySelector('.copy-code-btn')) return;
+      const codeEl = pre.querySelector('code');
+      if (!codeEl || !/\blanguage-/.test(codeEl.className || '')) return;
       pre.style.position = 'relative';
       const btn = document.createElement('button');
       btn.className = 'copy-code-btn';
@@ -79,27 +104,29 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
     }
   };
 
-  const handleDownload = () => {
-    // Gunakan HTML hasil render markdown (aman & rapi), fallback ke escape teks
-    const bodyHtml = renderedHtml || (content || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\n/g, '<br>');
-    const htmlContent = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head><meta charset='utf-8'><title>Dokumen Kali AI</title></head>
-      <body style="font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.5;">
-        ${bodyHtml}
-      </body></html>
-    `;
-    const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'kali-ai-dokumen.doc';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const handleExport = async (fmt) => {
+    setExportOpen(false);
+    const text = stripWrapperFence(content || '');
+    if (!text.trim()) return;
+    try {
+      const res = await fetch('/api/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: text, format: fmt, title: 'Dokumen Kali AI' }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kali-ai.' + fmt;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      alert('Gagal mengekspor: ' + e.message);
+    }
   };
 
   const handleSendToChat = () => {
@@ -156,7 +183,7 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
               type="button"
               onClick={handleSendToChat}
               disabled={!(content || '').trim()}
-              title="Kirim isi Canvas ke kotak chat"
+              title={window.getKaliText ? window.getKaliText('canvasSend', language) : 'Kirim isi Canvas ke kotak chat'}
               className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent text-[11px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
@@ -167,7 +194,7 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
           <button
             type="button"
             onClick={handleCopy}
-            title="Salin isi Canvas"
+            title={window.getKaliText ? window.getKaliText('canvasCopy', language) : 'Salin isi Canvas'}
             className="p-1.5 rounded-lg border border-border bg-card hover:bg-hover text-muted hover:text-ink transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
@@ -182,23 +209,32 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
             </svg>
           </button>
 
-          <button
-            type="button"
-            onClick={handleDownload}
-            title="Unduh sebagai dokumen Word (.doc)"
-            className="p-1.5 rounded-lg border border-border bg-card hover:bg-hover text-muted hover:text-ink transition-colors"
-          >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setExportOpen((v) => !v)}
+              title={window.getKaliText ? window.getKaliText('canvasDownload', language) : 'Unduh dokumen'}
+              className="p-1.5 rounded-lg border border-border bg-card hover:bg-hover text-muted hover:text-ink transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </button>
+            {exportOpen && (
+              <div className="absolute right-0 mt-1 z-20 min-w-[150px] rounded-lg border border-border bg-card shadow-lg overflow-hidden">
+                <button type="button" onClick={() => handleExport('docx')} className="block w-full text-left px-3 py-2 text-xs text-ink hover:bg-hover">Word (.docx)</button>
+                <button type="button" onClick={() => handleExport('xlsx')} className="block w-full text-left px-3 py-2 text-xs text-ink hover:bg-hover">Excel (.xlsx)</button>
+                <button type="button" onClick={() => handleExport('pptx')} className="block w-full text-left px-3 py-2 text-xs text-ink hover:bg-hover">PowerPoint (.pptx)</button>
+              </div>
+            )}
+          </div>
 
           <button
             type="button"
             onClick={onClose}
-            title="Tutup Canvas"
+            title={window.getKaliText ? window.getKaliText('canvasClose', language) : 'Tutup Canvas'}
             className="p-1.5 rounded-lg border border-border bg-card hover:bg-hover text-muted hover:text-ink transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">

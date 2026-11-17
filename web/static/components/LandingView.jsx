@@ -1,7 +1,7 @@
 // Landing Hero (English) - preview percakapan dengan animasi mengetik (typewriter)
 window.KalaAiComponents = window.KalaAiComponents || {};
 
-window.KalaAiComponents.LandingView = function LandingView({ onEnterChat, onOpenGems, theme, onToggleTheme }) {
+window.KalaAiComponents.LandingView = function LandingView({ language, onEnterChat, onOpenGems, theme, onToggleTheme }) {
   const { Logo } = window.KalaAiComponents;
   const { useState, useEffect, useRef } = React;
 
@@ -54,7 +54,7 @@ window.KalaAiComponents.LandingView = function LandingView({ onEnterChat, onOpen
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={onToggleTheme} title="Toggle theme" className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] text-muted hover:text-ink transition-colors shadow-sm">
+          <button onClick={onToggleTheme} title={window.getKaliText ? window.getKaliText('toggleTheme', language) : 'Toggle theme'} className="flex items-center justify-center w-10 h-10 rounded-full border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] text-muted hover:text-ink transition-colors shadow-sm">
             {theme === 'dark' ? (
               <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
             ) : (

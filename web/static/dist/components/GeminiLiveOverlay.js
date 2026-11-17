@@ -1,4 +1,3 @@
-import { jsxDEV as _jsxDEV } from "react/jsx-dev-runtime";
 // Komponen KalaAiLiveOverlay â€” voice live via Web Speech API (SpeechRecognition + speechSynthesis)
 window.KalaAiComponents = window.KalaAiComponents || {};
 window.KalaAiComponents.KalaAiLiveOverlay = function KalaAiLiveOverlay({
@@ -142,119 +141,98 @@ window.KalaAiComponents.KalaAiLiveOverlay = function KalaAiLiveOverlay({
     setManualText('');
   };
   if (!isOpen) return null;
-  return /*#__PURE__*/_jsxDEV("div", {
-    className: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in",
-    children: /*#__PURE__*/_jsxDEV("div", {
-      className: "w-full max-w-md rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center relative",
-      children: [/*#__PURE__*/_jsxDEV("button", {
-        type: "button",
-        onClick: onClose,
-        className: "absolute top-4 right-4 p-2 rounded-lg border border-border bg-surface text-muted hover:text-ink transition-colors",
-        children: /*#__PURE__*/_jsxDEV("svg", {
-          viewBox: "0 0 24 24",
-          className: "w-4 h-4",
-          fill: "none",
-          stroke: "currentColor",
-          strokeWidth: 1.75,
-          strokeLinecap: "round",
-          strokeLinejoin: "round",
-          children: [/*#__PURE__*/_jsxDEV("line", {
-            x1: "18",
-            y1: "6",
-            x2: "6",
-            y2: "18"
-          }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-            x1: "6",
-            y1: "6",
-            x2: "18",
-            y2: "18"
-          }, void 0, false)]
-        }, void 0, true)
-      }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-        className: "inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface text-muted text-xs font-mono mb-6",
-        children: [/*#__PURE__*/_jsxDEV("span", {
-          className: `w-2 h-2 rounded-full ${listening ? 'bg-accent animate-ping' : 'bg-muted'}`
-        }, void 0, false), /*#__PURE__*/_jsxDEV("span", {
-          children: "Kali AI Live Voice"
-        }, void 0, false)]
-      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-        className: "relative w-32 h-32 my-6 flex items-center justify-center",
-        children: [listening && /*#__PURE__*/_jsxDEV("div", {
-          className: "absolute inset-0 rounded-full border border-border animate-ping opacity-50"
-        }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-          className: `absolute inset-3 rounded-full bg-surface ${listening ? 'animate-pulse' : ''}`
-        }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
-          type: "button",
-          onClick: toggleMic,
-          disabled: !supportsRecognition,
-          className: `relative w-20 h-20 rounded-full flex items-center justify-center text-white transition-colors ${listening ? 'bg-accent hover:bg-accent-hover' : 'bg-muted hover:bg-ink'} disabled:opacity-40 disabled:cursor-not-allowed`,
-          title: listening ? 'Hentikan mikrofon' : 'Mulai mikrofon',
-          children: /*#__PURE__*/_jsxDEV("svg", {
-            viewBox: "0 0 24 24",
-            className: "w-8 h-8",
-            fill: "none",
-            stroke: "currentColor",
-            strokeWidth: 1.75,
-            strokeLinecap: "round",
-            strokeLinejoin: "round",
-            children: [/*#__PURE__*/_jsxDEV("path", {
-              d: "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"
-            }, void 0, false), /*#__PURE__*/_jsxDEV("path", {
-              d: "M19 10v2a7 7 0 0 1-14 0v-2"
-            }, void 0, false), /*#__PURE__*/_jsxDEV("line", {
-              x1: "12",
-              y1: "19",
-              x2: "12",
-              y2: "22"
-            }, void 0, false)]
-          }, void 0, true)
-        }, void 0, false)]
-      }, void 0, true), !supportsRecognition && /*#__PURE__*/_jsxDEV("p", {
-        className: "text-xs text-red-500 mb-3 max-w-xs",
-        children: "Browser ini tidak mendukung pengenalan suara. Gunakan Chrome/Edge terbaru, atau kirim teks manual di bawah."
-      }, void 0, false), error && /*#__PURE__*/_jsxDEV("p", {
-        className: "text-xs text-red-500 mb-3 max-w-xs",
-        children: error
-      }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-        className: "w-full text-left text-xs text-muted font-mono mb-2",
-        children: "Transkrip"
-      }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-        className: "w-full max-h-32 overflow-y-auto rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink text-left leading-relaxed min-h-[48px] mb-4",
-        children: [transcript || /*#__PURE__*/_jsxDEV("span", {
-          className: "text-muted italic",
-          children: "Belum ada ucapan."
-        }, void 0, false), interim && /*#__PURE__*/_jsxDEV("span", {
-          className: "text-muted",
-          children: [" ", interim]
-        }, void 0, true)]
-      }, void 0, true), /*#__PURE__*/_jsxDEV("form", {
-        onSubmit: handleManualSend,
-        className: "w-full flex items-center gap-2 mb-4",
-        children: [/*#__PURE__*/_jsxDEV("input", {
-          type: "text",
-          value: manualText,
-          onChange: e => setManualText(e.target.value),
-          placeholder: "Atau ketik manual...",
-          className: "flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-ink focus:outline-none focus:border-accent"
-        }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
-          type: "submit",
-          className: "px-3 py-2 rounded-lg border border-accent bg-accent text-white text-xs font-medium hover:bg-accent-hover transition-colors",
-          children: "Kirim"
-        }, void 0, false)]
-      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-        className: "flex items-center gap-3",
-        children: [/*#__PURE__*/_jsxDEV("button", {
-          type: "button",
-          onClick: () => setMuted(!muted),
-          className: `px-5 py-2.5 rounded-lg border text-xs font-medium transition-colors ${muted ? 'border-accent bg-accent text-white hover:bg-accent-hover' : 'border-border bg-surface text-ink hover:bg-hover'}`,
-          children: muted ? 'Suara TTS Mati' : 'Suara TTS Aktif'
-        }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
-          type: "button",
-          onClick: onClose,
-          className: "px-5 py-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-medium hover:bg-red-500/20 transition-colors",
-          children: "Akhiri Sesi"
-        }, void 0, false)]
-      }, void 0, true)]
-    }, void 0, true)
-  }, void 0, false);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-full max-w-md rounded-2xl border border-border bg-card p-8 flex flex-col items-center text-center relative"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onClose,
+    className: "absolute top-4 right-4 p-2 rounded-lg border border-border bg-surface text-muted hover:text-ink transition-colors"
+  }, /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    className: "w-4 h-4",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.75,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: "18",
+    y1: "6",
+    x2: "6",
+    y2: "18"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "6",
+    y1: "6",
+    x2: "18",
+    y2: "18"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface text-muted text-xs font-mono mb-6"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `w-2 h-2 rounded-full ${listening ? 'bg-accent animate-ping' : 'bg-muted'}`
+  }), /*#__PURE__*/React.createElement("span", null, "Kali AI Live Voice")), /*#__PURE__*/React.createElement("div", {
+    className: "relative w-32 h-32 my-6 flex items-center justify-center"
+  }, listening && /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 rounded-full border border-border animate-ping opacity-50"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: `absolute inset-3 rounded-full bg-surface ${listening ? 'animate-pulse' : ''}`
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: toggleMic,
+    disabled: !supportsRecognition,
+    className: `relative w-20 h-20 rounded-full flex items-center justify-center text-white transition-colors ${listening ? 'bg-accent hover:bg-accent-hover' : 'bg-muted hover:bg-ink'} disabled:opacity-40 disabled:cursor-not-allowed`,
+    title: listening ? 'Hentikan mikrofon' : 'Mulai mikrofon'
+  }, /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    className: "w-8 h-8",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.75,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M19 10v2a7 7 0 0 1-14 0v-2"
+  }), /*#__PURE__*/React.createElement("line", {
+    x1: "12",
+    y1: "19",
+    x2: "12",
+    y2: "22"
+  })))), !supportsRecognition && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-red-500 mb-3 max-w-xs"
+  }, "Browser ini tidak mendukung pengenalan suara. Gunakan Chrome/Edge terbaru, atau kirim teks manual di bawah."), error && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-red-500 mb-3 max-w-xs"
+  }, error), /*#__PURE__*/React.createElement("div", {
+    className: "w-full text-left text-xs text-muted font-mono mb-2"
+  }, "Transkrip"), /*#__PURE__*/React.createElement("div", {
+    className: "w-full max-h-32 overflow-y-auto rounded-lg border border-border bg-surface px-3 py-2 text-sm text-ink text-left leading-relaxed min-h-[48px] mb-4"
+  }, transcript || /*#__PURE__*/React.createElement("span", {
+    className: "text-muted italic"
+  }, "Belum ada ucapan."), interim && /*#__PURE__*/React.createElement("span", {
+    className: "text-muted"
+  }, " ", interim)), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleManualSend,
+    className: "w-full flex items-center gap-2 mb-4"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: manualText,
+    onChange: e => setManualText(e.target.value),
+    placeholder: "Atau ketik manual...",
+    className: "flex-1 px-3 py-2 rounded-lg border border-border bg-surface text-sm text-ink focus:outline-none focus:border-accent"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "px-3 py-2 rounded-lg border border-accent bg-accent text-white text-xs font-medium hover:bg-accent-hover transition-colors"
+  }, "Kirim")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setMuted(!muted),
+    className: `px-5 py-2.5 rounded-lg border text-xs font-medium transition-colors ${muted ? 'border-accent bg-accent text-white hover:bg-accent-hover' : 'border-border bg-surface text-ink hover:bg-hover'}`
+  }, muted ? 'Suara TTS Mati' : 'Suara TTS Aktif'), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onClose,
+    className: "px-5 py-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 text-xs font-medium hover:bg-red-500/20 transition-colors"
+  }, "Akhiri Sesi"))));
 };

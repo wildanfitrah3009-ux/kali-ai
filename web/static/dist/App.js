@@ -1,4 +1,3 @@
-import { jsxDEV as _jsxDEV, Fragment as _Fragment } from "react/jsx-dev-runtime";
 // Main App â€” dua tahap: LandingView -> Chat Workspace
 const {
   useState,
@@ -60,6 +59,47 @@ function App() {
     try {
       localStorage.setItem('kali_lang', lang);
     } catch (e) {}
+  };
+
+  // --- Autentikasi ---
+  const [authState, setAuthState] = useState({
+    loading: true,
+    enabled: false,
+    authed: true
+  });
+  const [loginPw, setLoginPw] = useState('');
+  useEffect(() => {
+    fetch('/api/auth-status').then(r => r.json()).then(j => {
+      setAuthState({
+        loading: false,
+        enabled: !!j.auth_enabled,
+        authed: !!j.authed
+      });
+    }).catch(() => setAuthState({
+      loading: false,
+      enabled: false,
+      authed: true
+    }));
+  }, []);
+  const doLogin = async e => {
+    e.preventDefault();
+    try {
+      const r = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          password: loginPw
+        })
+      });
+      if (r.ok) setAuthState(s => ({
+        ...s,
+        authed: true
+      }));else alert('Password salah.');
+    } catch (err) {
+      alert('Gagal login: ' + err.message);
+    }
   };
   const handleSetTheme = newTheme => {
     if (newTheme === 'system') {
@@ -253,13 +293,25 @@ function App() {
       const resp = await fetch('/api/chat', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Session-Id': convoId || 'default'
         },
         body: JSON.stringify({
           messages: history,
           search: searchEnabled,
           mode: thinkingEnabled ? 'thinking' : 'fast',
-          language
+          language,
+          session_id: convoId || 'default',
+          attachments: (attachments || []).map(a => a.extracted).filter(Boolean),
+          profile: (() => {
+            try {
+              return JSON.parse(localStorage.getItem('kali_profile') || '{}');
+            } catch (e) {
+              return {};
+            }
+          })(),
+          images: (attachments || []).map(a => a.image).filter(Boolean),
+          agentic: !!thinkingEnabled
         }),
         signal: controller.signal
       });
@@ -353,16 +405,34 @@ function App() {
           }
         }
       };
+
+      // Watchdog: jika tak ada data selama 60 detik, hentikan agar UI tidak nyangkut.
+      let watchdog = null;
+      const armWatchdog = () => {
+        if (watchdog) clearTimeout(watchdog);
+        watchdog = setTimeout(() => {
+          done = true;
+          try {
+            controller.abort();
+          } catch (e) {}
+        }, 60000);
+      };
+      armWatchdog();
       while (!done) {
         const {
           value,
           done: streamDone
         } = await reader.read();
         if (streamDone) {
+          if (watchdog) {
+            clearTimeout(watchdog);
+            watchdog = null;
+          }
           buffer += decoder.decode();
           if (buffer.trim()) handleEvent(buffer.replace(/\r\n/g, '\n'));
           break;
         }
+        armWatchdog();
         buffer += decoder.decode(value, {
           stream: true
         });
@@ -377,6 +447,10 @@ function App() {
       if (flushTimer) {
         clearTimeout(flushTimer);
         flushTimer = null;
+      }
+      if (watchdog) {
+        clearTimeout(watchdog);
+        watchdog = null;
       }
       flush();
       patch(m => ({
@@ -468,7 +542,37 @@ function App() {
     runChat(convoId, clean, history);
   };
   const handleSelectPrompt = prompt => setInput(prompt);
-  const handleAddAttachment = att => setAttachments(prev => [...prev, att]);
+  const handleAddAttachment = att => {
+    setAttachments(prev => [...prev, att]);
+    // Jika objek menyertakan File asli, unggah untuk diekstrak teksnya
+    if (att && att.file instanceof File && (att.type || '').startsWith('image/')) {
+      // Gambar: baca sebagai data URL untuk vision (tanpa upload ke server)
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAttachments(prev => prev.map(a => a === att ? {
+          ...a,
+          image: reader.result
+        } : a));
+      };
+      reader.readAsDataURL(att.file);
+      return;
+    }
+    if (att && att.file instanceof File) {
+      const fd = new FormData();
+      fd.append('file', att.file);
+      fetch('/api/upload', {
+        method: 'POST',
+        body: fd
+      }).then(r => r.ok ? r.json() : null).then(j => {
+        if (j && j.text) {
+          setAttachments(prev => prev.map(a => a === att ? {
+            ...a,
+            extracted: j.text
+          } : a));
+        }
+      }).catch(() => {});
+    }
+  };
   const handleRemoveAttachment = idx => setAttachments(prev => prev.filter((_, i) => i !== idx));
   const messagesEndRef = useRef(null);
   const nearBottomRef = useRef(true);
@@ -495,21 +599,17 @@ function App() {
     nearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
   };
   if (!Header || !Sidebar || !ZeroState || !ChatMessage || !PromptInputBox || !CanvasWorkspace || !PersonaModal || !KalaAiLiveOverlay || !LandingView) {
-    return /*#__PURE__*/_jsxDEV("div", {
-      className: "min-h-screen flex items-center justify-center bg-surface text-ink",
-      children: /*#__PURE__*/_jsxDEV("div", {
-        className: "max-w-md text-center p-6 rounded-2xl border border-border bg-card",
-        children: [/*#__PURE__*/_jsxDEV("h1", {
-          className: "text-lg font-semibold mb-2",
-          children: "Komponen belum termuat"
-        }, void 0, false), /*#__PURE__*/_jsxDEV("p", {
-          className: "text-sm text-muted",
-          children: "Pastikan semua file di static/components dimuat sebelum App.jsx."
-        }, void 0, false)]
-      }, void 0, true)
-    }, void 0, false);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "min-h-screen flex items-center justify-center bg-surface text-ink"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "max-w-md text-center p-6 rounded-2xl border border-border bg-card"
+    }, /*#__PURE__*/React.createElement("h1", {
+      className: "text-lg font-semibold mb-2"
+    }, "Komponen belum termuat"), /*#__PURE__*/React.createElement("p", {
+      className: "text-sm text-muted"
+    }, "Pastikan semua file di static/components dimuat sebelum App.jsx.")));
   }
-  const promptBox = /*#__PURE__*/_jsxDEV(PromptInputBox, {
+  const promptBox = /*#__PURE__*/React.createElement(PromptInputBox, {
     input: input,
     onChangeInput: setInput,
     onSubmit: handleSubmit,
@@ -524,122 +624,137 @@ function App() {
     onRemoveAttachment: handleRemoveAttachment,
     onOpenLive: () => setLiveOpen(true),
     language: language
-  }, void 0, false);
-  return /*#__PURE__*/_jsxDEV("div", {
-    className: "h-screen w-screen flex overflow-hidden bg-surface text-ink",
-    children: [view === 'landing' ? /*#__PURE__*/_jsxDEV(LandingView, {
-      onEnterChat: () => setView('chat'),
-      onOpenCanvas: () => {
-        setView('chat');
-        setCanvasOpen(true);
-      },
-      onOpenGems: () => setGemsModalOpen(true),
-      theme: theme,
-      onToggleTheme: toggleTheme
-    }, void 0, false) : /*#__PURE__*/_jsxDEV(_Fragment, {
-      children: [/*#__PURE__*/_jsxDEV(Sidebar, {
-        isOpen: sidebarOpen,
-        onToggle: () => setSidebarOpen(v => !v),
-        conversations: conversations,
-        activeId: activeId,
-        onSelectConvo: handleSelectConvo,
-        onNewChat: handleNewChat,
-        onTogglePin: handleTogglePin,
-        onDeleteConvo: handleDeleteConvo,
-        gems: gems,
-        activeGemId: activeGemId,
-        onSelectGem: setActiveGemId,
-        onOpenGemsModal: () => setGemsModalOpen(true),
-        serverInfo: serverInfo,
-        onOpenSettings: () => setSettingsOpen(true),
-        language: language
-      }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-        className: "flex-1 min-w-0 flex flex-col h-full",
-        children: [/*#__PURE__*/_jsxDEV(Header, {
-          onToggleSidebar: () => setSidebarOpen(v => !v),
-          onNewChat: handleNewChat,
-          theme: theme,
-          onToggleTheme: toggleTheme,
-          isCanvasOpen: canvasOpen,
-          onToggleCanvas: () => setCanvasOpen(v => !v),
-          onOpenLive: () => setLiveOpen(true),
-          activeGem: activeGem,
-          onClearGem: () => setActiveGemId(null),
-          onOpenGemsModal: () => setGemsModalOpen(true),
-          isZeroState: isZeroState,
-          onBackHome: () => setView('landing'),
-          sidebarOpen: sidebarOpen,
-          language: language,
-          onExportChat: () => handleExportChat('txt')
-        }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-          className: "flex-1 min-h-0 flex",
-          children: [/*#__PURE__*/_jsxDEV("div", {
-            className: "flex-1 min-w-0 flex flex-col h-full relative",
-            children: isZeroState ? /*#__PURE__*/_jsxDEV("div", {
-              className: "flex-1 min-h-0 overflow-y-auto flex flex-col",
-              children: /*#__PURE__*/_jsxDEV(ZeroState, {
-                activeGem: activeGem,
-                language: language,
-                children: promptBox
-              }, void 0, false)
-            }, void 0, false) : /*#__PURE__*/_jsxDEV(_Fragment, {
-              children: [/*#__PURE__*/_jsxDEV("div", {
-                className: "flex-1 min-h-0 overflow-y-auto chat-scroll",
-                onScroll: handleChatScroll,
-                children: /*#__PURE__*/_jsxDEV("div", {
-                  className: "max-w-3xl mx-auto w-full px-4 py-6 space-y-6",
-                  children: [messages.map(m => /*#__PURE__*/_jsxDEV(ChatMessage, {
-                    message: m,
-                    onRegenerate: m.role === 'assistant' ? () => handleRegenerate(m.id) : null,
-                    onOpenInCanvas: handleOpenInCanvas,
-                    onCopy: () => setToast('Disalin ke clipboard')
-                  }, m.id, false)), /*#__PURE__*/_jsxDEV("div", {
-                    ref: messagesEndRef
-                  }, void 0, false)]
-                }, void 0, true)
-              }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-                className: "px-4 pb-4 pt-2 shrink-0 bg-gradient-to-t from-surface via-surface to-transparent",
-                children: /*#__PURE__*/_jsxDEV("div", {
-                  className: "max-w-[720px] mx-auto",
-                  children: promptBox
-                }, void 0, false)
-              }, void 0, false)]
-            }, void 0, true)
-          }, void 0, false), /*#__PURE__*/_jsxDEV(CanvasWorkspace, {
-            isOpen: canvasOpen,
-            content: canvasContent,
-            onChangeContent: setCanvasContent,
-            onClose: () => setCanvasOpen(false),
-            onSendToChat: text => {
-              const t = (text || '').trim();
-              if (!t) return;
-              setInput(t);
-              setCanvasOpen(false);
-            }
-          }, void 0, false)]
-        }, void 0, true)]
-      }, void 0, true)]
-    }, void 0, true), /*#__PURE__*/_jsxDEV(PersonaModal, {
-      isOpen: gemsModalOpen,
-      onClose: () => setGemsModalOpen(false),
-      gems: gems,
-      onAddGem: handleAddGem,
-      onDeleteGem: handleDeleteGem
-    }, void 0, false), /*#__PURE__*/_jsxDEV(SettingsModal, {
-      isOpen: settingsOpen,
-      onClose: () => setSettingsOpen(false),
-      serverInfo: serverInfo,
-      theme: theme,
-      onToggleTheme: toggleTheme,
-      onSetTheme: handleSetTheme,
-      language: language,
-      onSetLanguage: handleSetLanguage
-    }, void 0, false), /*#__PURE__*/_jsxDEV(KalaAiLiveOverlay, {
-      isOpen: liveOpen,
-      onClose: () => setLiveOpen(false),
-      onTranscript: handleLiveTranscript
-    }, void 0, false)]
-  }, void 0, true);
+  });
+  if (authState.loading) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "h-screen w-screen flex items-center justify-center text-muted text-sm"
+    }, "Memuat...");
+  }
+  if (authState.enabled && !authState.authed) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "h-screen w-screen flex items-center justify-center bg-surface"
+    }, /*#__PURE__*/React.createElement("form", {
+      onSubmit: doLogin,
+      className: "p-6 rounded-2xl border border-border bg-card shadow-sm w-[320px] space-y-3"
+    }, /*#__PURE__*/React.createElement("h2", {
+      className: "text-lg font-semibold text-ink"
+    }, "Masuk ke Kali AI"), /*#__PURE__*/React.createElement("input", {
+      type: "password",
+      value: loginPw,
+      onChange: e => setLoginPw(e.target.value),
+      placeholder: "Password",
+      className: "w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm text-ink focus:outline-none focus:border-accent"
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "submit",
+      className: "w-full py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover"
+    }, "Masuk")));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "h-screen w-screen flex overflow-hidden bg-surface text-ink"
+  }, view === 'landing' ? /*#__PURE__*/React.createElement(LandingView, {
+    language: language,
+    onEnterChat: () => setView('chat'),
+    onOpenCanvas: () => {
+      setView('chat');
+      setCanvasOpen(true);
+    },
+    onOpenGems: () => setGemsModalOpen(true),
+    theme: theme,
+    onToggleTheme: toggleTheme
+  }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Sidebar, {
+    isOpen: sidebarOpen,
+    onToggle: () => setSidebarOpen(v => !v),
+    conversations: conversations,
+    activeId: activeId,
+    onSelectConvo: handleSelectConvo,
+    onNewChat: handleNewChat,
+    onTogglePin: handleTogglePin,
+    onDeleteConvo: handleDeleteConvo,
+    gems: gems,
+    activeGemId: activeGemId,
+    onSelectGem: setActiveGemId,
+    onOpenGemsModal: () => setGemsModalOpen(true),
+    serverInfo: serverInfo,
+    onOpenSettings: () => setSettingsOpen(true),
+    language: language
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-w-0 flex flex-col h-full"
+  }, /*#__PURE__*/React.createElement(Header, {
+    onToggleSidebar: () => setSidebarOpen(v => !v),
+    onNewChat: handleNewChat,
+    theme: theme,
+    onToggleTheme: toggleTheme,
+    isCanvasOpen: canvasOpen,
+    onToggleCanvas: () => setCanvasOpen(v => !v),
+    onOpenLive: () => setLiveOpen(true),
+    activeGem: activeGem,
+    onClearGem: () => setActiveGemId(null),
+    onOpenGemsModal: () => setGemsModalOpen(true),
+    isZeroState: isZeroState,
+    onBackHome: () => setView('landing'),
+    sidebarOpen: sidebarOpen,
+    language: language,
+    onExportChat: () => handleExportChat('txt')
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-h-0 flex"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-w-0 flex flex-col h-full relative"
+  }, isZeroState ? /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-h-0 overflow-y-auto flex flex-col"
+  }, /*#__PURE__*/React.createElement(ZeroState, {
+    activeGem: activeGem,
+    language: language
+  }, promptBox)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-h-0 overflow-y-auto chat-scroll",
+    onScroll: handleChatScroll
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-3xl mx-auto w-full px-4 py-6 space-y-6"
+  }, messages.map(m => /*#__PURE__*/React.createElement(ChatMessage, {
+    key: m.id,
+    message: m,
+    language: language,
+    onRegenerate: m.role === 'assistant' ? () => handleRegenerate(m.id) : null,
+    onOpenInCanvas: handleOpenInCanvas,
+    onCopy: () => setToast('Disalin ke clipboard')
+  })), /*#__PURE__*/React.createElement("div", {
+    ref: messagesEndRef
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "px-4 pb-4 pt-2 shrink-0 bg-gradient-to-t from-surface via-surface to-transparent"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "max-w-[720px] mx-auto"
+  }, promptBox)))), /*#__PURE__*/React.createElement(CanvasWorkspace, {
+    language: language,
+    isOpen: canvasOpen,
+    content: canvasContent,
+    onChangeContent: setCanvasContent,
+    onClose: () => setCanvasOpen(false),
+    onSendToChat: text => {
+      const t = (text || '').trim();
+      if (!t) return;
+      setInput(t);
+      setCanvasOpen(false);
+    }
+  })))), /*#__PURE__*/React.createElement(PersonaModal, {
+    language: language,
+    isOpen: gemsModalOpen,
+    onClose: () => setGemsModalOpen(false),
+    gems: gems,
+    onAddGem: handleAddGem,
+    onDeleteGem: handleDeleteGem
+  }), /*#__PURE__*/React.createElement(SettingsModal, {
+    isOpen: settingsOpen,
+    onClose: () => setSettingsOpen(false),
+    serverInfo: serverInfo,
+    theme: theme,
+    onToggleTheme: toggleTheme,
+    onSetTheme: handleSetTheme,
+    language: language,
+    onSetLanguage: handleSetLanguage
+  }), /*#__PURE__*/React.createElement(KalaAiLiveOverlay, {
+    isOpen: liveOpen,
+    onClose: () => setLiveOpen(false),
+    onTranscript: handleLiveTranscript
+  }));
 }
 window.KalaAiComponents = window.KalaAiComponents || {};
 window.KalaAiComponents.App = App;

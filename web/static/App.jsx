@@ -43,6 +43,23 @@ function App() {
     try { localStorage.setItem('kali_lang', lang); } catch (e) {}
   };
 
+  // --- Autentikasi ---
+  const [authState, setAuthState] = useState({ loading: true, enabled: false, authed: true });
+  const [loginPw, setLoginPw] = useState('');
+  useEffect(() => {
+    fetch('/api/auth-status').then((r) => r.json()).then((j) => {
+      setAuthState({ loading: false, enabled: !!j.auth_enabled, authed: !!j.authed });
+    }).catch(() => setAuthState({ loading: false, enabled: false, authed: true }));
+  }, []);
+  const doLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: loginPw }) });
+      if (r.ok) setAuthState((s) => ({ ...s, authed: true }));
+      else alert('Password salah.');
+    } catch (err) { alert('Gagal login: ' + err.message); }
+  };
+
   const handleSetTheme = (newTheme) => {
     if (newTheme === 'system') {
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -213,8 +230,20 @@ function App() {
     try {
       const resp = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history, search: searchEnabled, mode: thinkingEnabled ? 'thinking' : 'fast', language }),
+        headers: { 'Content-Type': 'application/json', 'X-Session-Id': convoId || 'default' },
+        body: JSON.stringify({
+          messages: history,
+          search: searchEnabled,
+          mode: thinkingEnabled ? 'thinking' : 'fast',
+          language,
+          session_id: convoId || 'default',
+          attachments: (attachments || []).map((a) => a.extracted).filter(Boolean),
+          profile: (() => {
+            try { return JSON.parse(localStorage.getItem('kali_profile') || '{}'); } catch (e) { return {}; }
+          })(),
+          images: (attachments || []).map((a) => a.image).filter(Boolean),
+          agentic: !!thinkingEnabled,
+        }),
         signal: controller.signal,
       });
 
@@ -265,13 +294,26 @@ function App() {
         }
       };
 
+      // Watchdog: jika tak ada data selama 60 detik, hentikan agar UI tidak nyangkut.
+      let watchdog = null;
+      const armWatchdog = () => {
+        if (watchdog) clearTimeout(watchdog);
+        watchdog = setTimeout(() => {
+          done = true;
+          try { controller.abort(); } catch (e) {}
+        }, 60000);
+      };
+      armWatchdog();
+
       while (!done) {
         const { value, done: streamDone } = await reader.read();
         if (streamDone) {
+          if (watchdog) { clearTimeout(watchdog); watchdog = null; }
           buffer += decoder.decode();
           if (buffer.trim()) handleEvent(buffer.replace(/\r\n/g, '\n'));
           break;
         }
+        armWatchdog();
         buffer += decoder.decode(value, { stream: true });
         const normalized = buffer.replace(/\r\n/g, '\n');
         const parts = normalized.split('\n\n');
@@ -283,6 +325,7 @@ function App() {
       }
 
       if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+      if (watchdog) { clearTimeout(watchdog); watchdog = null; }
       flush();
       patch((m) => ({ ...m, status: null, streaming: false }));
     } catch (err) {
@@ -360,7 +403,33 @@ function App() {
   };
 
   const handleSelectPrompt = (prompt) => setInput(prompt);
-  const handleAddAttachment = (att) => setAttachments((prev) => [...prev, att]);
+  const handleAddAttachment = (att) => {
+    setAttachments((prev) => [...prev, att]);
+    // Jika objek menyertakan File asli, unggah untuk diekstrak teksnya
+    if (att && att.file instanceof File && (att.type || '').startsWith('image/')) {
+      // Gambar: baca sebagai data URL untuk vision (tanpa upload ke server)
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAttachments((prev) => prev.map((a) => (a === att ? { ...a, image: reader.result } : a)));
+      };
+      reader.readAsDataURL(att.file);
+      return;
+    }
+    if (att && att.file instanceof File) {
+      const fd = new FormData();
+      fd.append('file', att.file);
+      fetch('/api/upload', { method: 'POST', body: fd })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => {
+          if (j && j.text) {
+            setAttachments((prev) =>
+              prev.map((a) => (a === att ? { ...a, extracted: j.text } : a))
+            );
+          }
+        })
+        .catch(() => {});
+    }
+  };
   const handleRemoveAttachment = (idx) => setAttachments((prev) => prev.filter((_, i) => i !== idx));
 
   const messagesEndRef = useRef(null);
@@ -417,10 +486,32 @@ function App() {
     />
   );
 
+  if (authState.loading) {
+    return <div className="h-screen w-screen flex items-center justify-center text-muted text-sm">Memuat...</div>;
+  }
+  if (authState.enabled && !authState.authed) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-surface">
+        <form onSubmit={doLogin} className="p-6 rounded-2xl border border-border bg-card shadow-sm w-[320px] space-y-3">
+          <h2 className="text-lg font-semibold text-ink">Masuk ke Kali AI</h2>
+          <input
+            type="password"
+            value={loginPw}
+            onChange={(e) => setLoginPw(e.target.value)}
+            placeholder="Password"
+            className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm text-ink focus:outline-none focus:border-accent"
+          />
+          <button type="submit" className="w-full py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover">Masuk</button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-screen flex overflow-hidden bg-surface text-ink">
       {view === 'landing' ? (
         <LandingView
+          language={language}
           onEnterChat={() => setView('chat')}
           onOpenCanvas={() => { setView('chat'); setCanvasOpen(true); }}
           onOpenGems={() => setGemsModalOpen(true)}
@@ -479,7 +570,7 @@ function App() {
                     <div className="flex-1 min-h-0 overflow-y-auto chat-scroll" onScroll={handleChatScroll}>
                       <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
                         {messages.map((m) => (
-                          <ChatMessage key={m.id} message={m} onRegenerate={m.role === 'assistant' ? () => handleRegenerate(m.id) : null} onOpenInCanvas={handleOpenInCanvas} onCopy={() => setToast('Disalin ke clipboard')} />
+                          <ChatMessage key={m.id} message={m} language={language} onRegenerate={m.role === 'assistant' ? () => handleRegenerate(m.id) : null} onOpenInCanvas={handleOpenInCanvas} onCopy={() => setToast('Disalin ke clipboard')} />
                         ))}
                         <div ref={messagesEndRef} />
                       </div>
@@ -492,6 +583,7 @@ function App() {
               </div>
 
               <CanvasWorkspace
+                language={language}
                 isOpen={canvasOpen}
                 content={canvasContent}
                 onChangeContent={setCanvasContent}
@@ -509,6 +601,7 @@ function App() {
       )}
 
       <PersonaModal
+        language={language}
         isOpen={gemsModalOpen}
         onClose={() => setGemsModalOpen(false)}
         gems={gems}

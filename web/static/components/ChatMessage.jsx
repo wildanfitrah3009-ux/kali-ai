@@ -3,8 +3,10 @@ window.KalaAiComponents = window.KalaAiComponents || {};
 
 window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
   message,
+  language,
   onOpenInCanvas,
   onCopy,
+  onRegenerate,
 }) {
   const { useState } = React;
   const [thinkingOpen, setThinkingOpen] = useState(false);
@@ -37,8 +39,8 @@ window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
 
   if (isUser) {
     return (
-      <div className="flex justify-end w-full animate-fade-in">
-        <div className="max-w-[82%] sm:max-w-[72%] rounded-2xl rounded-tr-md px-4 py-3 bg-accent-soft border border-accent/20 text-ink text-sm leading-relaxed whitespace-pre-wrap">
+      <div className="flex justify-end w-full msg-enter">
+        <div className="max-w-[82%] sm:max-w-[72%] rounded-2xl rounded-tr-md px-4 py-3 bg-accent-soft border border-accent/20 text-ink text-sm leading-relaxed whitespace-pre-wrap bubble-hover">
           {message.attachments && message.attachments.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-2">
               {message.attachments.map((file, idx) => (
@@ -56,20 +58,19 @@ window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
   }
 
   return (
-    <div className="flex items-start gap-3 w-full animate-fade-in">
-      <div className="w-8 h-8 rounded-lg border border-border bg-card flex items-center justify-center shrink-0 mt-0.5 text-accent">
-        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" />
-          <line x1="12" y1="22" x2="12" y2="12" />
-          <line x1="22" y1="8.5" x2="12" y2="12" />
-          <line x1="2" y1="8.5" x2="12" y2="12" />
-        </svg>
+    <div className="flex items-start gap-3 w-full msg-enter">
+      <div className="ai-avatar w-8 h-8 shrink-0 mt-0.5 flex items-center justify-center">
+        {window.KalaAiComponents && window.KalaAiComponents.Logo
+          ? React.createElement(window.KalaAiComponents.Logo, { className: 'w-8 h-8' })
+          : null}
       </div>
 
       <div className="flex-1 min-w-0 space-y-2.5">
         {message.status && !message.content && (
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card text-xs text-muted">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border bg-card text-xs text-muted msg-enter">
+            <span className="inline-flex items-center gap-1">
+              <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
+            </span>
             <span>{message.status}</span>
           </div>
         )}
@@ -110,14 +111,19 @@ window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
           <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-600 dark:text-red-400">
             {message.error}
           </div>
-        ) : (
-          message.content && (
-            <div className="rounded-2xl border border-border bg-card px-4 py-3.5 text-sm text-ink leading-relaxed">
-              <FormattedContent content={message.content} onOpenInCanvas={onOpenInCanvas} />
-              {message.streaming && <span className="inline-block w-1.5 h-4 ml-1 align-middle bg-accent animate-pulse" />}
-            </div>
-          )
-        )}
+        ) : message.content ? (
+          <div className="rounded-2xl border border-border bg-card px-4 py-3.5 text-sm text-ink leading-relaxed bubble-hover">
+            <FormattedContent content={message.content} onOpenInCanvas={onOpenInCanvas} />
+            {message.streaming && <span className="inline-block w-1.5 h-4 ml-1 align-middle bg-accent animate-pulse" />}
+          </div>
+        ) : message.streaming ? (
+          <div className="rounded-2xl border border-border bg-card px-4 py-3.5 text-sm text-muted flex items-center gap-2.5 bubble-hover">
+            <span className="inline-flex items-center gap-1">
+              <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
+            </span>
+            <span>Kali sedang berpikir</span>
+          </div>
+        ) : null}
 
         {message.content && !message.streaming && (
           <div className="flex items-center gap-1.5 pt-0.5">
@@ -128,10 +134,27 @@ window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
               <span>{copied ? 'Tersalin' : 'Salin'}</span>
             </button>
             {onRegenerate && (
-              <button type="button" onClick={onRegenerate} title="Ulangi Jawaban" className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-card hover:bg-hover text-[11px] text-muted hover:text-ink transition-colors ml-1">
+              <>
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    const u = new SpeechSynthesisUtterance(message.content || '');
+                    u.lang = language === 'en' ? 'en-US' : language === 'ja' ? 'ja-JP' : language === 'zh' ? 'zh-CN' : language === 'ko' ? 'ko-KR' : 'id-ID';
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(u);
+                  } catch (e) {}
+                }}
+                title="Putar suara"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-card hover:bg-hover text-[11px] text-muted hover:text-ink transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
+              </button>
+              <button type="button" onClick={onRegenerate} title={window.getKaliText ? window.getKaliText('regenerate', language) : 'Ulangi Jawaban'} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-card hover:bg-hover text-[11px] text-muted hover:text-ink transition-colors ml-1">
                 <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg>
                 <span>Ulangi</span>
               </button>
+              </>
             )}
           </div>
         )}
@@ -142,6 +165,17 @@ window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
   // Hanya re-render bila data pesan berubah (abaikan identitas callback)
   return prev.message === next.message;
 });
+
+function safeMarkedParse(text, opts) {
+  // Dukung marked v5+ (window.marked = fungsi) dan versi lama (objek .parse).
+  const m = window.marked;
+  if (!m) return null;
+  try {
+    if (typeof m === 'function') return m(text, opts);
+    if (typeof m.parse === 'function') return m.parse(text, opts);
+  } catch (e) { return null; }
+  return null;
+}
 
 function FormattedContent({ content, onOpenInCanvas }) {
   const containerRef = React.useRef(null);
@@ -157,7 +191,8 @@ function FormattedContent({ content, onOpenInCanvas }) {
   }
 
   const html = React.useMemo(() => {
-    if (!window.marked) {
+    const parsed = safeMarkedParse(chatText, { breaks: true });
+    if (parsed == null) {
       // Fallback aman: escape HTML agar teks tampil apa adanya, bukan tag mentah
       const esc = chatText
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -165,12 +200,14 @@ function FormattedContent({ content, onOpenInCanvas }) {
       return esc;
     }
     try {
-      const rawHtml = window.marked.parse(chatText, { breaks: true });
+      const rawHtml = parsed;
       const parser = new DOMParser();
       const doc = parser.parseFromString(rawHtml, 'text/html');
       
       doc.querySelectorAll('pre code').forEach((block) => {
-        if (window.hljs) {
+        // Hanya blok dengan bahasa eksplisit yang dianggap kode; jika tidak ada
+        // kelas language-*, biarkan apa adanya (jangan disorot/dianggap kode).
+        if (window.hljs && /\blanguage-/.test(block.className || '')) {
           window.hljs.highlightElement(block);
         }
       });
@@ -186,6 +223,9 @@ function FormattedContent({ content, onOpenInCanvas }) {
     const pres = containerRef.current.querySelectorAll('pre');
     pres.forEach((pre) => {
       if (pre.querySelector('.copy-code-btn')) return;
+      // Hanya tandai sebagai blok kode bila punya bahasa (pre code.language-*).
+      const codeEl = pre.querySelector('code');
+      if (!codeEl || !/\blanguage-/.test(codeEl.className || '')) return;
       pre.style.position = 'relative';
       const btn = document.createElement('button');
       btn.className = 'copy-code-btn';

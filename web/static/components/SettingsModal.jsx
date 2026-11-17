@@ -95,6 +95,56 @@ window.KalaAiComponents.SettingsModal = function SettingsModal({
                   ))}
                 </select>
               </div>
+
+              {/* Profil pengguna */}
+              <div className="space-y-2 border-t border-border pt-3">
+                <span className="text-sm font-medium text-ink">Profil (untuk personalisasi)</span>
+                {['name', 'profession', 'preferences'].map((field) => (
+                  <input
+                    key={field}
+                    type="text"
+                    defaultValue={(() => {
+                      try { return (JSON.parse(localStorage.getItem('kali_profile') || '{}') || {})[field] || ''; } catch (e) { return ''; }
+                    })()}
+                    placeholder={field === 'name' ? 'Nama Anda' : field === 'profession' ? 'Profesi/pekerjaan' : 'Preferensi (mis. jawab santai, pakai contoh)'}
+                    onChange={(e) => {
+                      let p = {};
+                      try { p = JSON.parse(localStorage.getItem('kali_profile') || '{}') || {}; } catch (err) {}
+                      p[field] = e.target.value;
+                      localStorage.setItem('kali_profile', JSON.stringify(p));
+                      fetch('/api/profile', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: 'default', ...p }),
+                      }).catch(() => {});
+                    }}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm text-ink focus:outline-none focus:border-accent"
+                  />
+                ))}
+              </div>
+
+              {/* Hapus memori sesi */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-ink">Memori percakapan</span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/session/clear', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: 'default' }),
+                      });
+                      alert('Memori berhasil dihapus.');
+                    } catch (e) {
+                      alert('Gagal menghapus memori: ' + e.message);
+                    }
+                  }}
+                  className="px-3 py-2 rounded-lg border border-border bg-transparent text-sm text-ink hover:bg-hover transition-colors"
+                >
+                  Hapus memori
+                </button>
+              </div>
             </div>
           </div>
         </div>

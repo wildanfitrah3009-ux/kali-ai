@@ -1,7 +1,7 @@
-import { jsxDEV as _jsxDEV, Fragment as _Fragment } from "react/jsx-dev-runtime";
 // Landing Hero (English) - preview percakapan dengan animasi mengetik (typewriter)
 window.KalaAiComponents = window.KalaAiComponents || {};
 window.KalaAiComponents.LandingView = function LandingView({
+  language,
   onEnterChat,
   onOpenGems,
   theme,
@@ -56,196 +56,164 @@ window.KalaAiComponents.LandingView = function LandingView({
   }, [currentStep, theme]);
   const isActive = i => i === currentStep;
   const isPast = i => i < currentStep;
-  return /*#__PURE__*/_jsxDEV("div", {
-    className: "min-h-screen w-full flex flex-col bg-surface text-ink overflow-y-auto relative",
-    children: [/*#__PURE__*/_jsxDEV("div", {
-      className: "pointer-events-none absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full bg-blue-200/40 dark:bg-blue-900/20 blur-3xl"
-    }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-      className: "pointer-events-none absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-indigo-200/30 dark:bg-indigo-900/20 blur-3xl"
-    }, void 0, false), /*#__PURE__*/_jsxDEV("header", {
-      className: "relative z-10 h-20 px-6 sm:px-12 flex items-center justify-between shrink-0",
-      children: [/*#__PURE__*/_jsxDEV("div", {
-        className: "flex items-center gap-3 select-none",
-        children: [/*#__PURE__*/_jsxDEV(Logo, {
-          className: "w-9 h-9"
-        }, void 0, false), /*#__PURE__*/_jsxDEV("span", {
-          className: "text-xl font-bold tracking-tight text-ink",
-          children: "Kali AI"
-        }, void 0, false)]
-      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-        className: "flex items-center gap-3",
-        children: [/*#__PURE__*/_jsxDEV("button", {
-          onClick: onToggleTheme,
-          title: "Toggle theme",
-          className: "flex items-center justify-center w-10 h-10 rounded-full border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] text-muted hover:text-ink transition-colors shadow-sm",
-          children: theme === 'dark' ? /*#__PURE__*/_jsxDEV("svg", {
-            viewBox: "0 0 24 24",
-            className: "w-5 h-5",
-            fill: "none",
-            stroke: "currentColor",
-            strokeWidth: 2,
-            strokeLinecap: "round",
-            strokeLinejoin: "round",
-            children: [/*#__PURE__*/_jsxDEV("circle", {
-              cx: "12",
-              cy: "12",
-              r: "4"
-            }, void 0, false), /*#__PURE__*/_jsxDEV("path", {
-              d: "M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
-            }, void 0, false)]
-          }, void 0, true) : /*#__PURE__*/_jsxDEV("svg", {
-            viewBox: "0 0 24 24",
-            className: "w-5 h-5",
-            fill: "none",
-            stroke: "currentColor",
-            strokeWidth: 2,
-            strokeLinecap: "round",
-            strokeLinejoin: "round",
-            children: /*#__PURE__*/_jsxDEV("path", {
-              d: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
-            }, void 0, false)
-          }, void 0, false)
-        }, void 0, false), /*#__PURE__*/_jsxDEV("button", {
-          onClick: onEnterChat,
-          className: "flex items-center gap-1.5 h-10 px-6 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-sm font-semibold transition-colors shadow-sm",
-          children: "Start Chat"
-        }, void 0, false)]
-      }, void 0, true)]
-    }, void 0, true), /*#__PURE__*/_jsxDEV("main", {
-      className: "relative z-10 flex-1 max-w-[1320px] mx-auto w-full px-6 sm:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-12 lg:py-16",
-      children: [/*#__PURE__*/_jsxDEV("div", {
-        className: "animate-fade-in",
-        children: [/*#__PURE__*/_jsxDEV("h1", {
-          className: "text-5xl sm:text-6xl lg:text-[64px] font-bold tracking-[-0.03em] leading-[1.05] mb-8",
-          style: {
-            color: theme === 'dark' ? '#F1F5F9' : '#0F172A'
-          },
-          children: ["Build, Analyze,", /*#__PURE__*/_jsxDEV("br", {}, void 0, false), "Deploy Faster", /*#__PURE__*/_jsxDEV("br", {}, void 0, false), "with AI Workspace"]
-        }, void 0, true), /*#__PURE__*/_jsxDEV("p", {
-          className: "text-lg leading-relaxed max-w-[520px] mb-10",
-          style: {
-            color: theme === 'dark' ? '#94A3B8' : '#475569'
-          },
-          children: "Kali AI brings you an intelligent workspace to write, build code, and analyze documents - all in one calm, focused flow."
-        }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-          className: "flex flex-wrap items-center gap-4",
-          children: /*#__PURE__*/_jsxDEV("button", {
-            onClick: onEnterChat,
-            className: "flex items-center gap-2 h-12 px-8 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-base font-semibold transition-colors shadow-lg shadow-blue-500/20",
-            children: ["Enter Chat Room", /*#__PURE__*/_jsxDEV("svg", {
-              viewBox: "0 0 24 24",
-              className: "w-5 h-5",
-              fill: "none",
-              stroke: "currentColor",
-              strokeWidth: 2,
-              strokeLinecap: "round",
-              strokeLinejoin: "round",
-              children: [/*#__PURE__*/_jsxDEV("line", {
-                x1: "5",
-                y1: "12",
-                x2: "19",
-                y2: "12"
-              }, void 0, false), /*#__PURE__*/_jsxDEV("polyline", {
-                points: "12 5 19 12 12 19"
-              }, void 0, false)]
-            }, void 0, true)]
-          }, void 0, true)
-        }, void 0, false)]
-      }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-        className: "animate-fade-in relative w-full flex justify-center lg:justify-end",
-        style: {
-          animationDelay: '0.15s'
-        },
-        children: /*#__PURE__*/_jsxDEV("button", {
-          onClick: onEnterChat,
-          className: "group relative w-full max-w-[660px] text-left block",
-          children: [/*#__PURE__*/_jsxDEV("div", {
-            className: "absolute inset-0 translate-x-3 translate-y-3 rounded-[28px] border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] opacity-40 transition-transform duration-300 group-hover:translate-x-4 group-hover:translate-y-4"
-          }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-            className: "absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[28px] border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] opacity-70 transition-transform duration-300 group-hover:translate-x-2 group-hover:translate-y-2"
-          }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-            className: "relative rounded-[28px] border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-shadow duration-300 group-hover:shadow-[0_16px_50px_rgba(15,23,42,0.12)]",
-            children: [/*#__PURE__*/_jsxDEV("div", {
-              className: "flex items-center justify-between pb-4 mb-4 border-b border-[#E2E8F0] dark:border-[#2A2D34]",
-              children: [/*#__PURE__*/_jsxDEV("div", {
-                className: "flex items-center gap-2",
-                children: [/*#__PURE__*/_jsxDEV("span", {
-                  className: "w-3 h-3 rounded-full bg-red-300"
-                }, void 0, false), /*#__PURE__*/_jsxDEV("span", {
-                  className: "w-3 h-3 rounded-full bg-amber-300"
-                }, void 0, false), /*#__PURE__*/_jsxDEV("span", {
-                  className: "w-3 h-3 rounded-full bg-emerald-300"
-                }, void 0, false)]
-              }, void 0, true), /*#__PURE__*/_jsxDEV("span", {
-                className: "flex items-center gap-1.5 text-xs font-mono text-[#94A3B8]",
-                children: [/*#__PURE__*/_jsxDEV("span", {
-                  className: "w-1.5 h-1.5 rounded-full bg-emerald-500"
-                }, void 0, false), "kali-ai.chat"]
-              }, void 0, true)]
-            }, void 0, true), /*#__PURE__*/_jsxDEV("div", {
-              className: "space-y-4 min-h-[260px]",
-              children: messages.map((msg, i) => {
-                if (!isActive(i) && !isPast(i)) return null;
-                const shownText = isPast(i) ? msg.text : typedText;
-                const showCursor = isActive(i) && isTyping;
-                const textNode = /*#__PURE__*/_jsxDEV(_Fragment, {
-                  children: [shownText, showCursor && /*#__PURE__*/_jsxDEV("span", {
-                    className: "inline-block w-[2px] h-[1em] align-[-2px] ml-0.5 bg-current animate-typing-cursor"
-                  }, void 0, false)]
-                }, void 0, true);
-                if (msg.role === 'user') {
-                  return /*#__PURE__*/_jsxDEV("div", {
-                    className: "flex justify-end animate-message-pop",
-                    children: /*#__PURE__*/_jsxDEV("div", {
-                      className: "max-w-[78%] rounded-2xl rounded-tr-sm px-4 py-2.5 bg-[#EFF6FF] dark:bg-[#1E3A8A]/30 border border-[#DBEAFE] dark:border-[#1E3A8A] text-sm text-ink min-h-[38px]",
-                      children: textNode
-                    }, void 0, false)
-                  }, i, false);
-                }
-                return /*#__PURE__*/_jsxDEV("div", {
-                  className: "flex items-start gap-2.5 animate-message-pop",
-                  children: [/*#__PURE__*/_jsxDEV("span", {
-                    className: "shrink-0 mt-0.5",
-                    children: /*#__PURE__*/_jsxDEV(Logo, {
-                      className: "w-7 h-7"
-                    }, void 0, false)
-                  }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-                    className: "max-w-[82%] rounded-2xl rounded-tl-sm px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#22252D] border border-[#E2E8F0] dark:border-[#2A2D34] text-sm text-ink leading-relaxed min-h-[44px]",
-                    children: textNode
-                  }, void 0, false)]
-                }, i, true);
-              })
-            }, void 0, false), /*#__PURE__*/_jsxDEV("div", {
-              className: "flex items-center justify-between pt-4 mt-2 border-t border-[#E2E8F0] dark:border-[#2A2D34]",
-              children: [/*#__PURE__*/_jsxDEV("span", {
-                className: "flex items-center gap-1.5 text-xs text-[#94A3B8]",
-                children: [/*#__PURE__*/_jsxDEV("span", {
-                  className: "w-1.5 h-1.5 rounded-full bg-emerald-500"
-                }, void 0, false), "Live conversation"]
-              }, void 0, true), /*#__PURE__*/_jsxDEV("span", {
-                className: "inline-flex items-center gap-1.5 text-xs font-medium text-[#1D4ED8] dark:text-[#60A5FA]",
-                children: ["Enter chat", /*#__PURE__*/_jsxDEV("svg", {
-                  viewBox: "0 0 24 24",
-                  className: "w-4 h-4",
-                  fill: "none",
-                  stroke: "currentColor",
-                  strokeWidth: 2,
-                  strokeLinecap: "round",
-                  strokeLinejoin: "round",
-                  children: [/*#__PURE__*/_jsxDEV("line", {
-                    x1: "5",
-                    y1: "12",
-                    x2: "19",
-                    y2: "12"
-                  }, void 0, false), /*#__PURE__*/_jsxDEV("polyline", {
-                    points: "12 5 19 12 12 19"
-                  }, void 0, false)]
-                }, void 0, true)]
-              }, void 0, true)]
-            }, void 0, true)]
-          }, void 0, true)]
-        }, void 0, true)
-      }, void 0, false)]
-    }, void 0, true)]
-  }, void 0, true);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "min-h-screen w-full flex flex-col bg-surface text-ink overflow-y-auto relative"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pointer-events-none absolute -top-32 -left-32 w-[420px] h-[420px] rounded-full bg-blue-200/40 dark:bg-blue-900/20 blur-3xl"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pointer-events-none absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-indigo-200/30 dark:bg-indigo-900/20 blur-3xl"
+  }), /*#__PURE__*/React.createElement("header", {
+    className: "relative z-10 h-20 px-6 sm:px-12 flex items-center justify-between shrink-0"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 select-none"
+  }, /*#__PURE__*/React.createElement(Logo, {
+    className: "w-9 h-9"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "text-xl font-bold tracking-tight text-ink"
+  }, "Kali AI")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onToggleTheme,
+    title: window.getKaliText ? window.getKaliText('toggleTheme', language) : 'Toggle theme',
+    className: "flex items-center justify-center w-10 h-10 rounded-full border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] text-muted hover:text-ink transition-colors shadow-sm"
+  }, theme === 'dark' ? /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    className: "w-5 h-5",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "12",
+    cy: "12",
+    r: "4"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+  })) : /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    className: "w-5 h-5",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"
+  }))), /*#__PURE__*/React.createElement("button", {
+    onClick: onEnterChat,
+    className: "flex items-center gap-1.5 h-10 px-6 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-sm font-semibold transition-colors shadow-sm"
+  }, "Start Chat"))), /*#__PURE__*/React.createElement("main", {
+    className: "relative z-10 flex-1 max-w-[1320px] mx-auto w-full px-6 sm:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-12 lg:py-16"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "animate-fade-in"
+  }, /*#__PURE__*/React.createElement("h1", {
+    className: "text-5xl sm:text-6xl lg:text-[64px] font-bold tracking-[-0.03em] leading-[1.05] mb-8",
+    style: {
+      color: theme === 'dark' ? '#F1F5F9' : '#0F172A'
+    }
+  }, "Build, Analyze,", /*#__PURE__*/React.createElement("br", null), "Deploy Faster", /*#__PURE__*/React.createElement("br", null), "with AI Workspace"), /*#__PURE__*/React.createElement("p", {
+    className: "text-lg leading-relaxed max-w-[520px] mb-10",
+    style: {
+      color: theme === 'dark' ? '#94A3B8' : '#475569'
+    }
+  }, "Kali AI brings you an intelligent workspace to write, build code, and analyze documents - all in one calm, focused flow."), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onEnterChat,
+    className: "flex items-center gap-2 h-12 px-8 rounded-full bg-[#1D4ED8] hover:bg-[#1E40AF] text-white text-base font-semibold transition-colors shadow-lg shadow-blue-500/20"
+  }, "Enter Chat Room", /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    className: "w-5 h-5",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: "5",
+    y1: "12",
+    x2: "19",
+    y2: "12"
+  }), /*#__PURE__*/React.createElement("polyline", {
+    points: "12 5 19 12 12 19"
+  }))))), /*#__PURE__*/React.createElement("div", {
+    className: "animate-fade-in relative w-full flex justify-center lg:justify-end",
+    style: {
+      animationDelay: '0.15s'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onEnterChat,
+    className: "group relative w-full max-w-[660px] text-left block"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 translate-x-3 translate-y-3 rounded-[28px] border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] opacity-40 transition-transform duration-300 group-hover:translate-x-4 group-hover:translate-y-4"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "absolute inset-0 translate-x-1.5 translate-y-1.5 rounded-[28px] border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] opacity-70 transition-transform duration-300 group-hover:translate-x-2 group-hover:translate-y-2"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "relative rounded-[28px] border border-[#E2E8F0] dark:border-[#2A2D34] bg-white dark:bg-[#16181D] p-6 shadow-[0_8px_30px_rgba(15,23,42,0.06)] transition-shadow duration-300 group-hover:shadow-[0_16px_50px_rgba(15,23,42,0.12)]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between pb-4 mb-4 border-b border-[#E2E8F0] dark:border-[#2A2D34]"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-3 h-3 rounded-full bg-red-300"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "w-3 h-3 rounded-full bg-amber-300"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "w-3 h-3 rounded-full bg-emerald-300"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center gap-1.5 text-xs font-mono text-[#94A3B8]"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-1.5 h-1.5 rounded-full bg-emerald-500"
+  }), "kali-ai.chat")), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-4 min-h-[260px]"
+  }, messages.map((msg, i) => {
+    if (!isActive(i) && !isPast(i)) return null;
+    const shownText = isPast(i) ? msg.text : typedText;
+    const showCursor = isActive(i) && isTyping;
+    const textNode = /*#__PURE__*/React.createElement(React.Fragment, null, shownText, showCursor && /*#__PURE__*/React.createElement("span", {
+      className: "inline-block w-[2px] h-[1em] align-[-2px] ml-0.5 bg-current animate-typing-cursor"
+    }));
+    if (msg.role === 'user') {
+      return /*#__PURE__*/React.createElement("div", {
+        key: i,
+        className: "flex justify-end animate-message-pop"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "max-w-[78%] rounded-2xl rounded-tr-sm px-4 py-2.5 bg-[#EFF6FF] dark:bg-[#1E3A8A]/30 border border-[#DBEAFE] dark:border-[#1E3A8A] text-sm text-ink min-h-[38px]"
+      }, textNode));
+    }
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "flex items-start gap-2.5 animate-message-pop"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "shrink-0 mt-0.5"
+    }, /*#__PURE__*/React.createElement(Logo, {
+      className: "w-7 h-7"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "max-w-[82%] rounded-2xl rounded-tl-sm px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#22252D] border border-[#E2E8F0] dark:border-[#2A2D34] text-sm text-ink leading-relaxed min-h-[44px]"
+    }, textNode));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between pt-4 mt-2 border-t border-[#E2E8F0] dark:border-[#2A2D34]"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center gap-1.5 text-xs text-[#94A3B8]"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-1.5 h-1.5 rounded-full bg-emerald-500"
+  }), "Live conversation"), /*#__PURE__*/React.createElement("span", {
+    className: "inline-flex items-center gap-1.5 text-xs font-medium text-[#1D4ED8] dark:text-[#60A5FA]"
+  }, "Enter chat", /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 24 24",
+    className: "w-4 h-4",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("line", {
+    x1: "5",
+    y1: "12",
+    x2: "19",
+    y2: "12"
+  }), /*#__PURE__*/React.createElement("polyline", {
+    points: "12 5 19 12 12 19"
+  })))))))));
 };

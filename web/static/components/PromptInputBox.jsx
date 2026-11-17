@@ -25,7 +25,7 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
   const handleVoiceInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Browser Anda tidak mendukung fitur input suara.');
+      alert(window.getKaliText ? window.getKaliText('voiceUnsupported', language) : 'Browser Anda tidak mendukung fitur input suara.');
       return;
     }
     const recognition = new SpeechRecognition();
@@ -60,7 +60,7 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
-    files.forEach((file) => onAddAttachment({ name: file.name, size: file.size, type: file.type }));
+    files.forEach((file) => onAddAttachment({ name: file.name, size: file.size, type: file.type, file }));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -79,6 +79,11 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
             <div className="flex flex-wrap gap-1.5 mb-2.5 pb-2 border-b border-border">
               {attachments.map((att, idx) => (
                 <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-surface text-xs font-mono text-ink">
+                  {att.extracted ? (
+                    <span className="w-3 h-3 text-emerald-500" title="Teks terbaca">âœ“</span>
+                  ) : att.file ? (
+                    <span className="w-3 h-3 text-muted" title="Membaca file...">â€¦</span>
+                  ) : null}
                   <span className="truncate max-w-[140px]">{att.name}</span>
                   <button type="button" onClick={() => onRemoveAttachment(idx)} className="text-muted hover:text-red-500">
                     <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
@@ -109,7 +114,7 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" /><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" /><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" /></svg>
-                <span>DeepThink</span>
+                <span>{window.getKaliText ? window.getKaliText('deepthink', language) : 'Nalar'}</span>
               </button>
 
               <button
@@ -120,7 +125,7 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-                <span>Search</span>
+                <span>{window.getKaliText ? window.getKaliText('search', language) : 'Search'}</span>
               </button>
             </div>
 
@@ -128,7 +133,7 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
               <button
                 type="button"
                 onClick={handleVoiceInput}
-                title="Input Suara"
+                title={window.getKaliText ? window.getKaliText('voiceInput', language) : 'Input Suara'}
                 className={`flex items-center justify-center w-9 h-9 rounded-full transition-colors ${isListening ? 'bg-red-500/20 text-red-500 animate-pulse' : 'text-muted hover:text-ink hover:bg-hover'}`}
               >
                 <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="22" /></svg>
@@ -137,21 +142,21 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                title="Lampirkan file"
+                title={window.getKaliText ? window.getKaliText('attachFile', language) : 'Lampirkan file'}
                 className="flex items-center justify-center w-9 h-9 rounded-full text-muted hover:text-ink hover:bg-hover transition-colors"
               >
                 <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
               </button>
 
               {isGenerating ? (
-                <button type="button" onClick={onStop} title="Hentikan" className="flex items-center justify-center w-9 h-9 rounded-full border border-accent/40 bg-accent-soft text-accent hover:bg-accent hover:text-white transition-colors">
+                <button type="button" onClick={onStop} title={window.getKaliText ? window.getKaliText('stop', language) : 'Hentikan'} className="flex items-center justify-center w-9 h-9 rounded-full border border-accent/40 bg-accent-soft text-accent hover:bg-accent hover:text-white transition-colors">
                   <svg viewBox="0 0 24 24" className="w-[16px] h-[16px]" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5" /></svg>
                 </button>
               ) : (
                 <button
                   type="submit"
                   disabled={!input.trim() && attachments.length === 0}
-                  title="Kirim pesan"
+                  title={window.getKaliText ? window.getKaliText('sendMessage', language) : 'Kirim pesan'}
                   className={`flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
                     input.trim() || attachments.length > 0
                       ? 'bg-accent text-white hover:bg-accent-hover'

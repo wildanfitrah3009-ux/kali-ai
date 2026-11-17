@@ -9,6 +9,7 @@ __pycache__/
 web/.env
 web/api_keys.json
 web/usage.json
+web/.memory/
 
 # Logs
 *.log

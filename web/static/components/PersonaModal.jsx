@@ -72,7 +72,7 @@ window.KalaAiComponents.PersonaModal = function PersonaModal({
                     <h4 className="text-xs font-semibold text-ink truncate">{gem.name}</h4>
                     <p className="text-xs text-muted mt-0.5 line-clamp-2 leading-relaxed">{gem.instruction}</p>
                   </div>
-                  <button type="button" onClick={() => onDeleteGem(gem.id)} title="Hapus Gem" className="p-1.5 rounded-lg border border-border bg-surface text-muted hover:text-red-500 transition-colors shrink-0">
+                  <button type="button" onClick={() => onDeleteGem(gem.id)} title={window.getKaliText ? window.getKaliText('deleteGem', language) : 'Hapus Gem'} className="p-1.5 rounded-lg border border-border bg-surface text-muted hover:text-red-500 transition-colors shrink-0">
                     <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                   </button>
                 </div>
