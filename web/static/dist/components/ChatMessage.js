@@ -239,6 +239,11 @@ function FormattedContent({
     artifactText = artifactMatch[1].trim();
     chatText = content.replace(/\[ARTIFACT\][\s\S]*?\[\/ARTIFACT\]/, '\n\n*(Dokumen dibuat dan dibuka di panel Canvas)*').trim();
   }
+
+  // Jika seluruh jawaban dibungkus satu blok kode ```...```, buka pembungkusnya
+  // agar heading, tabel, dan teks dirender sebagai Markdown (bukan kode hitam).
+  const _fence = chatText.trim().match(/^```[\w-]*\n([\s\S]*?)\n```$/);
+  if (_fence) chatText = _fence[1];
   const html = React.useMemo(() => {
     const parsed = safeMarkedParse(chatText, {
       breaks: true
