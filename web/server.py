@@ -568,3 +568,14 @@ app.mount('/static', StaticFiles(directory=static_dir), name='static')
 @app.get('/')
 def index():
     return FileResponse(static_dir / 'index.html')
+
+
+# ---------------------------------------------------------------------------
+# Gateway API OpenAI-compatible (/v1/*) â€” auth, metering, cache
+# ---------------------------------------------------------------------------
+try:
+    import api_gateway
+    app.include_router(api_gateway.router)
+except Exception as _gw_err:  # jangan gagalkan server bila gateway bermasalah
+    import logging
+    logging.getLogger('webai').warning('Gateway API tidak aktif: %s', _gw_err)

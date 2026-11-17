@@ -7,6 +7,8 @@ __pycache__/
 # Environment / secrets
 .env
 web/.env
+web/api_keys.json
+web/usage.json
 
 # Logs
 *.log
