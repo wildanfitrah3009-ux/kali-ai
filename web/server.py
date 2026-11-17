@@ -425,9 +425,13 @@ else:
 # ---------------------------------------------------------------------------
 STREAM_FNS = [stream_fn]
 if PROVIDER in ('openai', 'openrouter'):
-    _fallback = os.getenv('OPENAI_FALLBACK_MODELS', '').strip()
-    if _fallback:
+    if PROVIDER == 'openrouter':
+        _fallback = os.getenv('OPENROUTER_FALLBACK_MODELS', '').strip()
+        _base = os.getenv('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1')
+    else:
+        _fallback = os.getenv('OPENAI_FALLBACK_MODELS', '').strip()
         _base = os.getenv('OPENAI_BASE_URL', 'https://api.openai.com/v1')
+    if _fallback:
         for _m in [x.strip() for x in _fallback.split(',') if x.strip()]:
             if _m and _m != MODEL:
                 STREAM_FNS.append(build_openai_like(_base, API_KEY, _m))
