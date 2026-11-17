@@ -154,7 +154,13 @@ function FormattedContent({ content, onOpenInCanvas }) {
   }
 
   const html = React.useMemo(() => {
-    if (!window.marked) return chatText;
+    if (!window.marked) {
+      // Fallback aman: escape HTML agar teks tampil apa adanya, bukan tag mentah
+      const esc = chatText
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br/>');
+      return esc;
+    }
     try {
       const rawHtml = window.marked.parse(chatText, { breaks: true });
       const parser = new DOMParser();
@@ -168,9 +174,9 @@ function FormattedContent({ content, onOpenInCanvas }) {
       
       return doc.body.innerHTML;
     } catch (e) {
-      return content;
+      return chatText;
     }
-  }, [content]);
+  }, [chatText]);
 
   React.useEffect(() => {
     if (!containerRef.current) return;
@@ -198,7 +204,7 @@ function FormattedContent({ content, onOpenInCanvas }) {
     <div>
       <div 
         ref={containerRef}
-        className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap break-words"
+        className="prose prose-sm dark:prose-invert max-w-none break-words prose-table:w-full prose-table:text-xs prose-pre:overflow-x-auto prose-headings:scroll-mt-16"
         dangerouslySetInnerHTML={{ __html: html }} 
       />
       {artifactText && onOpenInCanvas && (

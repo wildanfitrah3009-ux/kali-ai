@@ -144,8 +144,8 @@ window.KalaAiComponents.PromptInputBox = function PromptInputBox({
               </button>
 
               {isGenerating ? (
-                <button type="button" onClick={onStop} title="Hentikan" className="flex items-center justify-center w-9 h-9 rounded-full border border-red-500/30 bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors">
-                  <svg viewBox="0 0 24 24" className="w-[18px] h-[18px]" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
+                <button type="button" onClick={onStop} title="Hentikan" className="flex items-center justify-center w-9 h-9 rounded-full border border-accent/40 bg-accent-soft text-accent hover:bg-accent hover:text-white transition-colors">
+                  <svg viewBox="0 0 24 24" className="w-[16px] h-[16px]" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5" /></svg>
                 </button>
               ) : (
                 <button
