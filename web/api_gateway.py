@@ -22,10 +22,12 @@ router = APIRouter()
 REQUIRE_KEY = os.getenv('GATEWAY_REQUIRE_KEY', '1') != '0'
 
 
-def _auth(authorization: str | None = None):
+from fastapi import Header
+
+
+def _auth(authorization: str | None = Header(default=None)):
     if not REQUIRE_KEY:
         return {'key': 'anonymous', 'name': 'anonymous'}
-    from fastapi import Header
     return gw.require_key(authorization)
 
 
@@ -60,6 +62,12 @@ def usage(auth=Depends(_auth)):
 @router.post('/v1/chat/completions')
 async def chat_completions(req: OAIRequest, request: Request, auth=Depends(_auth)):
     import server
+
+    # rate-limit per key (rpm dari api_keys.json)
+    try:
+        gw.check_rate_limit(auth.get('key', ''), int(auth.get('rpm', 0) or 0))
+    except Exception:
+        raise
 
     msgs = server.prepare_messages([m.model_dump() for m in req.messages])
     if not msgs:

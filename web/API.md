@@ -54,8 +54,24 @@ Info provider & model (publik, tanpa auth).
 Dokumentasi interaktif Swagger UI (otomatis dari FastAPI).
 
 ## Rate limit
-Default 10 request/menit per IP (endpoint `/api/chat`). Atur `rpm` per key di
-`api_keys.json` untuk batas per-user.
+- `/api/chat`: 10 request/menit per IP (slowapi).
+- `/v1/chat/completions`: **per API key**, sesuai field `rpm` di `api_keys.json`
+  (sliding window 60 detik). Bila terlampaui â†’ HTTP 429 + header `Retry-After`.
+
+## Manajemen API key (CLI)
+
+```bash
+# buat key baru (rpm = batas per menit)
+python web/manage_keys.py add --name alice --plan free --rpm 10
+# daftar key (ter-mask)
+python web/manage_keys.py list
+# aktif / nonaktif
+python web/manage_keys.py disable --name alice
+python web/manage_keys.py enable  --name alice
+```
+
+Key disimpan di `web/api_keys.json` (di-ignore Git). Contoh tersedia di
+`web/api_keys.example.json`.
 
 ## Billing / usage
 Setiap request dicatat ke `usage.json`:

@@ -130,3 +130,42 @@ def cache_set(key: str, value: str) -> None:
 
 def usage_summary() -> dict:
     return _load_json(USAGE_PATH, {'events': [], 'totals': {}}).get('totals', {})
+
+
+# ---------------------------------------------------------------------------
+# Rate-limit per API key (sliding window in-memory)
+# ---------------------------------------------------------------------------
+_RATE: dict[str, list[float]] = {}
+_RATE_LOCK = threading.Lock()
+
+
+def check_rate_limit(key: str, rpm: int) -> None:
+    """Lempar HTTPException 429 bila key melebihi rpm per menit."""
+    if not rpm or rpm <= 0:
+        return
+    now = time.time()
+    window_start = now - 60.0
+    with _RATE_LOCK:
+        hits = [t for t in _RATE.get(key, []) if t >= window_start]
+        if len(hits) >= rpm:
+            retry = int(60 - (now - hits[0])) + 1
+            _RATE[key] = hits
+            raise HTTPException(
+                429,
+                f'Rate limit terlampaui ({rpm}/menit). Coba lagi dalam {max(retry, 1)} detik.',
+                headers={'Retry-After': str(max(retry, 1))},
+            )
+        hits.append(now)
+        _RATE[key] = hits
+
+
+def generate_key(name: str, plan: str = 'free', rpm: int = 10) -> dict:
+    """Buat key baru, simpan ke api_keys.json, kembalikan entri."""
+    import uuid
+    new_key = 'wai_' + uuid.uuid4().hex
+    entry = {'key': new_key, 'name': name, 'plan': plan, 'rpm': rpm, 'active': True}
+    with _LOCK:
+        data = _load_json(KEYS_PATH, {'keys': []})
+        data.setdefault('keys', []).append(entry)
+        KEYS_PATH.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding='utf-8')
+    return entry
