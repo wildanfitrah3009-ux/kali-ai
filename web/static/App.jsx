@@ -446,7 +446,7 @@ function App() {
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-6">
                         {messages.map((m) => (
-                          <ChatMessage key={m.id} message={m} onRegenerate={m.role === 'assistant' ? () => handleRegenerate(m.id) : null} onOpenInCanvas={handleOpenInCanvas} onCopy={() => {}} />
+                          <ChatMessage key={m.id} message={m} onRegenerate={m.role === 'assistant' ? () => handleRegenerate(m.id) : null} onOpenInCanvas={handleOpenInCanvas} onCopy={() => setToast('Disalin ke clipboard')} />
                         ))}
                         <div ref={messagesEndRef} />
                       </div>
