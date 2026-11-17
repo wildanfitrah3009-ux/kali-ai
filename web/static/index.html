@@ -88,9 +88,7 @@
     ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 
-    /* Animasi ringan (GPU-friendly) */
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fade-in { animation: fadeIn 0.18s ease-out; }
+    /* Aksesibilitas: kurangi animasi bila pengguna memintanya */
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
     }
