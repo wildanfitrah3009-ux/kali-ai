@@ -1,7 +1,7 @@
 import { jsxDEV as _jsxDEV, Fragment as _Fragment } from "react/jsx-dev-runtime";
 // Komponen ChatMessage (Anti-UI-Slop: flat tonal surface, 1px border, strokeWidth={1.75})
 window.KalaAiComponents = window.KalaAiComponents || {};
-window.KalaAiComponents.ChatMessage = function ChatMessage({
+window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
   message,
   onOpenInCanvas,
   onCopy
@@ -226,7 +226,10 @@ window.KalaAiComponents.ChatMessage = function ChatMessage({
       }, void 0, true)]
     }, void 0, true)]
   }, void 0, true);
-};
+}, (prev, next) => {
+  // Hanya re-render bila data pesan berubah (abaikan identitas callback)
+  return prev.message === next.message;
+});
 function FormattedContent({
   content,
   onOpenInCanvas

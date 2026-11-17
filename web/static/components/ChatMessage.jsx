@@ -1,7 +1,7 @@
 // Komponen ChatMessage (Anti-UI-Slop: flat tonal surface, 1px border, strokeWidth={1.75})
 window.KalaAiComponents = window.KalaAiComponents || {};
 
-window.KalaAiComponents.ChatMessage = function ChatMessage({
+window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
   message,
   onOpenInCanvas,
   onCopy,
@@ -138,7 +138,10 @@ window.KalaAiComponents.ChatMessage = function ChatMessage({
       </div>
     </div>
   );
-};
+}, (prev, next) => {
+  // Hanya re-render bila data pesan berubah (abaikan identitas callback)
+  return prev.message === next.message;
+});
 
 function FormattedContent({ content, onOpenInCanvas }) {
   const containerRef = React.useRef(null);
