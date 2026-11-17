@@ -315,6 +315,34 @@ function App() {
     runChat(convoId, text, history);
   };
 
+  const handleLiveTranscript = (text) => {
+    const clean = (text || '').trim();
+    if (!clean || isGenerating) return;
+
+    let convoId = activeId;
+    if (!convoId) {
+      const convo = { id: uid('convo'), title: 'Percakapan Baru', pinned: false, messages: [] };
+      setConversations((prev) => [convo, ...prev]);
+      setActiveId(convo.id);
+      convoId = convo.id;
+    }
+
+    const userMsg = { id: uid('msg'), role: 'user', content: clean };
+    const priorMessages = (conversations.find((c) => c.id === convoId) || {}).messages || [];
+    const history = buildHistory(priorMessages, clean);
+
+    updateConvoMessages(convoId, (msgs) => [...msgs, userMsg]);
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === convoId && (c.title === 'Percakapan Baru' || !c.title)
+          ? { ...c, title: clean.slice(0, 60) || 'Percakapan Baru' }
+          : c
+      )
+    );
+    setView('chat');
+    runChat(convoId, clean, history);
+  };
+
   const handleSelectPrompt = (prompt) => setInput(prompt);
   const handleAddAttachment = (att) => setAttachments((prev) => [...prev, att]);
   const handleRemoveAttachment = (idx) => setAttachments((prev) => prev.filter((_, i) => i !== idx));
@@ -435,6 +463,12 @@ function App() {
                 content={canvasContent}
                 onChangeContent={setCanvasContent}
                 onClose={() => setCanvasOpen(false)}
+                onSendToChat={(text) => {
+                  const t = (text || '').trim();
+                  if (!t) return;
+                  setInput(t);
+                  setCanvasOpen(false);
+                }}
               />
             </div>
           </div>
@@ -460,7 +494,7 @@ function App() {
         onSetLanguage={handleSetLanguage}
       />
 
-      <KalaAiLiveOverlay isOpen={liveOpen} onClose={() => setLiveOpen(false)} />
+      <KalaAiLiveOverlay isOpen={liveOpen} onClose={() => setLiveOpen(false)} onTranscript={handleLiveTranscript} />
     </div>
   );
 }

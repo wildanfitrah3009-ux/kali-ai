@@ -6,10 +6,54 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
   content,
   onChangeContent,
   onClose,
+  onSendToChat,
 }) {
-  const { useState } = React;
+  const { useState, useMemo, useRef, useEffect } = React;
   const [tab, setTab] = useState('editor'); // 'editor' | 'preview'
   const [copied, setCopied] = useState(false);
+  const [sent, setSent] = useState(false);
+  const previewRef = useRef(null);
+
+  const renderedHtml = useMemo(() => {
+    const text = content || '';
+    if (!text) return '';
+    if (!window.marked) return text;
+    try {
+      const rawHtml = window.marked.parse(text, { breaks: true });
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(rawHtml, 'text/html');
+      doc.querySelectorAll('pre code').forEach((block) => {
+        if (window.hljs) {
+          try { window.hljs.highlightElement(block); } catch (e) {}
+        }
+      });
+      return doc.body.innerHTML;
+    } catch (e) {
+      return text;
+    }
+  }, [content]);
+
+  useEffect(() => {
+    if (tab !== 'preview' || !previewRef.current) return;
+    const pres = previewRef.current.querySelectorAll('pre');
+    pres.forEach((pre) => {
+      if (pre.querySelector('.copy-code-btn')) return;
+      pre.style.position = 'relative';
+      const btn = document.createElement('button');
+      btn.className = 'copy-code-btn';
+      btn.innerText = 'Salin Kode';
+      btn.style.cssText = 'position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#e2e8f0;font-size:11px;padding:2px 6px;border-radius:4px;cursor:pointer;';
+      btn.onclick = () => {
+        const code = pre.querySelector('code');
+        if (code) {
+          navigator.clipboard.writeText(code.innerText);
+          btn.innerText = 'Tersalin!';
+          setTimeout(() => { btn.innerText = 'Salin Kode'; }, 2000);
+        }
+      };
+      pre.appendChild(btn);
+    });
+  }, [renderedHtml, tab]);
 
   if (!isOpen) return null;
 
@@ -54,21 +98,20 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
+  const handleSendToChat = () => {
+    if (!onSendToChat) return;
+    onSendToChat(content || '');
+    setSent(true);
+    setTimeout(() => setSent(false), 1800);
+  };
+
   return (
     <section className="w-full lg:w-[46%] xl:w-[48%] h-full flex flex-col border-l border-border bg-card shrink-0 z-20 animate-fade-in">
       {/* Canvas Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-border bg-sidebar shrink-0">
         <div className="flex items-center gap-2">
           <span className="flex items-center justify-center w-7 h-7 rounded-lg border border-border bg-card text-accent">
-            <svg
-              viewBox="0 0 24 24"
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.75}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
               <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
               <polyline points="14 2 14 8 20 8" />
             </svg>
@@ -104,6 +147,19 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
             </button>
           </div>
 
+          {onSendToChat && (
+            <button
+              type="button"
+              onClick={handleSendToChat}
+              disabled={!(content || '').trim()}
+              title="Kirim isi Canvas ke kotak chat"
+              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg border border-accent/30 bg-accent/10 hover:bg-accent/20 text-accent text-[11px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+              <span>{sent ? 'Terkirim' : 'Kirim ke chat'}</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={handleCopy}
@@ -125,7 +181,7 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
           <button
             type="button"
             onClick={handleDownload}
-            title="Unduh Markdown"
+            title="Unduh sebagai dokumen Word (.doc)"
             className="p-1.5 rounded-lg border border-border bg-card hover:bg-hover text-muted hover:text-ink transition-colors"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
@@ -159,9 +215,15 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
             className="w-full h-full p-5 bg-surface text-ink font-mono text-xs leading-relaxed resize-none focus:outline-none"
           />
         ) : (
-          <div className="w-full h-full p-6 overflow-y-auto text-sm text-ink leading-relaxed whitespace-pre-wrap">
-            {content || (
-              <span className="text-muted italic">Belum ada konten untuk ditampilkan.</span>
+          <div className="w-full h-full p-6 overflow-y-auto">
+            {content ? (
+              <div
+                ref={previewRef}
+                className="prose prose-sm dark:prose-invert max-w-none text-sm text-ink leading-relaxed break-words"
+                dangerouslySetInnerHTML={{ __html: renderedHtml }}
+              />
+            ) : (
+              <span className="text-muted italic text-sm">Belum ada konten untuk ditampilkan.</span>
             )}
           </div>
         )}
