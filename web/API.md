@@ -50,6 +50,10 @@ Ringkasan pemakaian (request, token, biaya estimasi) untuk user pemilik key.
 ### GET /api/info
 Info provider & model (publik, tanpa auth).
 
+### GET /health
+Cek kesehatan server: status, provider, model, apakah key terpasang, jumlah fallback.
+Berguna untuk monitoring & load balancer.
+
 ### GET /docs
 Dokumentasi interaktif Swagger UI (otomatis dari FastAPI).
 

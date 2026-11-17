@@ -445,8 +445,8 @@ def friendly_error(raw: str) -> str:
             'Model gratis sedang penuh (rate limit dari penyedia). '
             'Coba lagi beberapa saat, atau pasang API key sendiri / ganti ke model lain.'
         )
-    if '401' in low or 'unauthorized' in low or 'invalid api key' in low:
-        return 'API key tidak valid atau kedaluwarsa. Periksa kembali file .env.'
+    if '401' in low or 'unauthorized' in low or 'invalid api key' in low or 'user not found' in low:
+        return 'API key tidak valid, sudah di-revoke, atau kedaluwarsa. Periksa/perbarui OPENROUTER_API_KEY (atau key provider lain) di file .env.'
     if '402' in low or 'insufficient' in low or 'quota' in low:
         return 'Kuota/kredit akun habis. Isi saldo atau ganti ke model gratis.'
     if 'timeout' in low or 'timed out' in low:
@@ -563,6 +563,19 @@ async def chat(request: Request, req: ChatRequest):
 @app.get('/api/info')
 def info():
     return {'provider': PROVIDER, 'model': MODEL, 'search': SEARCH_ENABLED}
+
+
+@app.get('/health')
+def health():
+    import time as _t
+    return {
+        'status': 'ok',
+        'provider': PROVIDER,
+        'model': MODEL,
+        'has_key': bool(API_KEY) or PROVIDER == 'ollama',
+        'fallback_count': len(STREAM_FNS) - 1,
+        'time': int(_t.time()),
+    }
 
 
 static_dir = Path(__file__).parent / 'static'

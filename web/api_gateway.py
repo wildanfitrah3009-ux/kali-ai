@@ -116,6 +116,10 @@ async def chat_completions(req: OAIRequest, request: Request, auth=Depends(_auth
     try:
         async for delta in server.STREAM_FNS[0](msgs, system, temperature, max_tokens):
             collected.append(delta)
+    except HTTPException as e:
+        # teruskan status asli provider (401/402/429) + pesan ramah
+        code = e.status_code if isinstance(e.status_code, int) else 502
+        raise HTTPException(code, server.friendly_error(str(e.detail)))
     except Exception as e:
         raise HTTPException(502, server.friendly_error(str(e)))
 
