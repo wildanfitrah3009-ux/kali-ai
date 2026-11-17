@@ -19,5 +19,6 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Node (jika nanti ada)
+# Node
 node_modules/
+package-lock.json
