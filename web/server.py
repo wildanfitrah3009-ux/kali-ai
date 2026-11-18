@@ -23,7 +23,7 @@ except ImportError:
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Header, Depends
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,6 +50,18 @@ def _rate_key(request: Request) -> str:
     return 'ip:' + get_remote_address(request)
 
 
+# Proteksi endpoint berbayar (/api/chat, /api/export). Default nonaktif agar
+# pemakaian lokal tetap mulus; set REQUIRE_API_KEY=true saat dipublikasikan.
+REQUIRE_API_KEY = os.getenv('REQUIRE_API_KEY', 'false').lower() == 'true'
+
+
+def _require_api_key(authorization: str | None = Header(default=None)):
+    if not REQUIRE_API_KEY:
+        return {'key': 'anonymous', 'name': 'anonymous'}
+    import gateway as _gw
+    return _gw.require_key(authorization)
+
+
 try:
     oauth.init_db()
 except Exception:
@@ -61,12 +73,15 @@ app = FastAPI(title='Web AI')
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# CORS: batasi origin lewat env ALLOWED_ORIGINS (dipisah koma). Default kosong =
+# hanya same-origin yang diizinkan. Jangan pakai '*' bila credentials aktif.
+_ALLOWED_ORIGINS = [o.strip() for o in os.getenv('ALLOWED_ORIGINS', '').split(',') if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=['GET', 'POST', 'OPTIONS'],
+    allow_headers=['Content-Type', 'Authorization', 'X-Session-Id'],
 )
 
 # ---------------------------------------------------------------------------
@@ -727,7 +742,7 @@ def auth_local_login(req: dict):
 
 @app.post('/api/chat')
 @limiter.limit('10/minute')
-async def chat(request: Request, req: ChatRequest):
+async def chat(request: Request, req: ChatRequest, _key=Depends(_require_api_key)):
     # Login dinonaktifkan: chat terbuka tanpa autentikasi.
     pass
     msgs = prepare_messages([m.model_dump() for m in req.messages])
@@ -934,7 +949,7 @@ class ExportRequest(BaseModel):
 
 
 @app.post('/api/export')
-def export_doc(req: ExportRequest):
+def export_doc(req: ExportRequest, _key=Depends(_require_api_key)):
     fmt = (req.format or 'docx').lower().strip()
     try:
         import exporters
@@ -984,6 +999,9 @@ async def health():
                 upstream['models'] = ids
         except Exception as e:
             upstream = {'reachable': False, 'error': str(e)[:200]}
+    # Endpoint publik: jangan bocorkan detail internal kecuali diminta eksplisit.
+    if os.getenv('HEALTH_DETAILS', 'false').lower() != 'true':
+        return {'status': 'ok', 'time': int(_t.time())}
     return {
         'status': 'ok',
         'provider': PROVIDER,
