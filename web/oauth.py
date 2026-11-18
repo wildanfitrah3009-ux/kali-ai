@@ -74,6 +74,12 @@ def verify_local(email, password):
 
 # --- State & sesi OAuth ---
 _SECRET = os.getenv('APP_SECRET', 'kali-secret-change-me')
+if _SECRET == 'kali-secret-change-me':
+    import logging as _logging
+    _logging.getLogger('webai').warning(
+        'APP_SECRET belum diset â€” memakai default TIDAK AMAN. '
+        'Set APP_SECRET acak sebelum mengaktifkan login/OAuth di publik.'
+    )
 
 def make_state():
     s = secrets.token_urlsafe(24)

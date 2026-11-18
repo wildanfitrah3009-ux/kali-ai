@@ -252,7 +252,14 @@ function App() {
     try {
       const resp = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Session-Id': browserId() },
+        headers: (() => {
+          const h = { 'Content-Type': 'application/json', 'X-Session-Id': browserId() };
+          try {
+            const k = localStorage.getItem('kali_api_key');
+            if (k) h['Authorization'] = 'Bearer ' + k;
+          } catch (e) {}
+          return h;
+        })(),
         body: JSON.stringify({
           messages: history,
           search: searchEnabled,

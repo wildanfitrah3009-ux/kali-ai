@@ -5,7 +5,6 @@ import json
 import html
 import asyncio
 import httpx
-import socket
 
 # Pastikan folder 'web' ada di sys.path agar modul lokal (features, auth, tools, exporters)
 # bisa diimpor baik saat dijalankan sebagai 'web.server:app' maupun dari dalam folder web.

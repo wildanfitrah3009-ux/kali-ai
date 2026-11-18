@@ -107,14 +107,15 @@ def cache_key(model: str, messages: list, system: str) -> str:
 
 
 def cache_get(key: str) -> Optional[str]:
-    item = _CACHE.get(key)
-    if not item:
-        return None
-    ts, value = item
-    if time.time() - ts > CACHE_TTL:
-        _CACHE.pop(key, None)
-        return None
-    return value
+    with _LOCK:
+        item = _CACHE.get(key)
+        if not item:
+            return None
+        ts, value = item
+        if time.time() - ts > CACHE_TTL:
+            _CACHE.pop(key, None)
+            return None
+        return value
 
 
 def cache_set(key: str, value: str) -> None:

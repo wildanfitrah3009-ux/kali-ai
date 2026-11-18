@@ -111,7 +111,14 @@ window.KalaAiComponents.CanvasWorkspace = function CanvasWorkspace({
     try {
       const res = await fetch('/api/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: (() => {
+          const h = { 'Content-Type': 'application/json' };
+          try {
+            const k = localStorage.getItem('kali_api_key');
+            if (k) h['Authorization'] = 'Bearer ' + k;
+          } catch (e) {}
+          return h;
+        })(),
         body: JSON.stringify({ content: text, format: fmt, title: 'Dokumen Kali AI' }),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
