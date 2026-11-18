@@ -646,7 +646,14 @@ function App() {
       className: "p-6 rounded-2xl border border-border bg-card shadow-sm w-[340px] space-y-3"
     }, /*#__PURE__*/React.createElement("h2", {
       className: "text-lg font-semibold text-ink text-center"
-    }, "Masuk ke Kali AI"), providers.includes('google') && /*#__PURE__*/React.createElement("a", {
+    }, "Masuk ke Kali AI"), (() => {
+      const e = new URLSearchParams(window.location.search).get('login_error');
+      if (!e) return null;
+      const msg = e === 'state_invalid' ? 'Sesi login kedaluwarsa. Coba lagi.' : 'Login gagal: ' + e;
+      return /*#__PURE__*/React.createElement("div", {
+        className: "text-xs text-red-500 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2"
+      }, msg);
+    })(), providers.includes('google') && /*#__PURE__*/React.createElement("a", {
       href: "/auth/google",
       className: btn
     }, "Masuk dengan Google"), providers.includes('github') && /*#__PURE__*/React.createElement("a", {

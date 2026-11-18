@@ -641,14 +641,25 @@ def auth_github(request: Request):
     state = oauth.make_state()
     redirect_uri = _redirect_base(request) + '/auth/github/callback'
     from urllib.parse import urlencode
-    q = urlencode({'client_id': cfg['client_id'], 'redirect_uri': redirect_uri, 'scope': cfg['scope'], 'state': state})
-    return RedirectResponse(cfg['auth_url'] + '?' + q)
+    q = urlencode({
+        'client_id': cfg['client_id'],
+        'redirect_uri': redirect_uri,
+        'scope': cfg['scope'],
+        'state': state,
+        'allow_signup': 'true',
+    })
+    resp = RedirectResponse(cfg['auth_url'] + '?' + q, status_code=302)
+    resp.set_cookie('kali_oauth_state', state, httponly=True, samesite='lax', max_age=600)
+    return resp
 
 
 @app.get('/auth/github/callback')
-async def auth_github_cb(request: Request, code: str = '', state: str = ''):
-    if not oauth.verify_state(state):
-        raise HTTPException(400, 'State tidak valid.')
+async def auth_github_cb(request: Request, code: str = '', state: str = '', error: str = '', error_description: str = ''):
+    if error:
+        return RedirectResponse('/?login_error=' + error)
+    cookie_state = request.cookies.get('kali_oauth_state', '')
+    if not (oauth.verify_state(state) or (cookie_state and state == cookie_state)):
+        return RedirectResponse('/?login_error=state_invalid')
     cfg = oauth.oauth_config()['github']
     redirect_uri = _redirect_base(request) + '/auth/github/callback'
     async with httpx.AsyncClient(timeout=20) as client:

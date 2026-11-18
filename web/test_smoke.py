@@ -48,7 +48,13 @@ def collect_deltas(body: str) -> str:
 
 @pytest.fixture(scope='module')
 def client():
-    return TestClient(server.app)
+    # Nonaktifkan wajib-login selama test (uji logika chat, bukan auth).
+    import oauth
+    orig = oauth.oauth_config
+    oauth.oauth_config = lambda: {'google': {'client_id': '', 'client_secret': ''}, 'github': {'client_id': '', 'client_secret': ''}}
+    c = TestClient(server.app)
+    yield c
+    oauth.oauth_config = orig
 
 
 def test_info_endpoint(client):

@@ -504,6 +504,12 @@ function App() {
       <div className="h-screen w-screen flex items-center justify-center bg-surface">
         <div className="p-6 rounded-2xl border border-border bg-card shadow-sm w-[340px] space-y-3">
           <h2 className="text-lg font-semibold text-ink text-center">Masuk ke Kali AI</h2>
+          {(() => {
+            const e = new URLSearchParams(window.location.search).get('login_error');
+            if (!e) return null;
+            const msg = e === 'state_invalid' ? 'Sesi login kedaluwarsa. Coba lagi.' : ('Login gagal: ' + e);
+            return <div className="text-xs text-red-500 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">{msg}</div>;
+          })()}
           {providers.includes('google') && (
             <a href="/auth/google" className={btn}>Masuk dengan Google</a>
           )}
