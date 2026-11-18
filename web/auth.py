@@ -34,7 +34,19 @@ def verify_token(token: str) -> bool:
         return False
 
 
+def _has_oauth_session(request: Request) -> bool:
+    try:
+        import oauth
+        tok = request.cookies.get('kali_user')
+        return bool(tok and oauth.verify_session(tok))
+    except Exception:
+        return False
+
+
 def is_authed(request: Request) -> bool:
+    # Sesi login user (GitHub/lokal) dianggap sah lebih dulu.
+    if _has_oauth_session(request):
+        return True
     if not auth_enabled():
         return True
     tok = request.cookies.get('kali_auth') or request.headers.get('x-auth-token')
