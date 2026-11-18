@@ -42,7 +42,7 @@ def cmd_list(_args):
     print(f"{'name':20} {'plan':8} {'rpm':>4}  {'active':6}  key")
     for k in data['keys']:
         masked = k['key'][:12] + '...'
-        print(f"{k.get('name',''):20} {k.get('plan',''):8} {k.get('rpm',0):>4}  {str(k.get('active',True)):6}  {masked}")
+        print(f"{k.get('name',''):20} {k.get('plan',''):8} {k.get('rpm',0):>4}  {k.get('active',True)!s:6}  {masked}")
 
 
 def _set_active(name, active):

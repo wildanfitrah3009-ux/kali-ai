@@ -138,9 +138,9 @@ async def chat_completions(req: OAIRequest, request: Request, auth=Depends(_auth
     except HTTPException as e:
         # teruskan status asli provider (401/402/429) + pesan ramah
         code = e.status_code if isinstance(e.status_code, int) else 502
-        raise HTTPException(code, server.friendly_error(str(e.detail)))
+        raise HTTPException(code, server.friendly_error(str(e.detail))) from e
     except Exception as e:
-        raise HTTPException(502, server.friendly_error(str(e)))
+        raise HTTPException(502, server.friendly_error(str(e))) from e
 
     content = ''.join(collected)
     tokens_out = gw.estimate_tokens(content)
