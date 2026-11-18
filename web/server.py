@@ -12,13 +12,7 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 
-# Paksa gunakan DNS publik (Cloudflare & Google) untuk menembus blokir DNS lokal
 custom_resolver = httpx.AsyncHTTPTransport(retries=2)
-try:
-    import dns.resolver
-    # (Cadangan jika dnspython terpasang)
-except ImportError:
-    pass
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -547,7 +541,8 @@ def sse(obj: dict) -> str:
 
 
 @app.post('/api/upload')
-async def upload(request: Request):
+@limiter.limit('20/minute')
+async def upload(request: Request, _key=Depends(_require_api_key)):
     """Terima file, kembalikan teks yang diekstrak untuk dijadikan konteks chat."""
     form = await request.form()
     file = form.get('file')
@@ -599,8 +594,6 @@ async def login(request: Request):
 
 @app.get('/api/auth-status')
 def auth_status(request: Request):
-    oc = oauth.oauth_config()
-    providers = [p for p, c in oc.items() if c['client_id'] and c['client_secret']]
     return {'auth_enabled': False, 'authed': True, 'providers': []}
 
 
@@ -948,7 +941,8 @@ class ExportRequest(BaseModel):
 
 
 @app.post('/api/export')
-def export_doc(req: ExportRequest, _key=Depends(_require_api_key)):
+@limiter.limit('20/minute')
+def export_doc(request: Request, req: ExportRequest, _key=Depends(_require_api_key)):
     fmt = (req.format or 'docx').lower().strip()
     try:
         import exporters

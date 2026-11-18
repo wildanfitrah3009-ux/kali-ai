@@ -24,7 +24,6 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 import gateway  # noqa: E402
 import server  # noqa: E402
-import api_gateway  # noqa: E402
 
 TEST_KEY = 'wai_test_key_123'
 TEST_NAME = 'pytest-user'

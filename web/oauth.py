@@ -1,6 +1,5 @@
 """Login OAuth (Google & GitHub) + database user SQLite."""
 import os
-import json
 import time
 import sqlite3
 import secrets

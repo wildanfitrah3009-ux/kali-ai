@@ -4,7 +4,6 @@ import hmac
 import hashlib
 import time
 from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
 
 _PASSWORD = os.getenv('APP_PASSWORD', '').strip()
 _SECRET = os.getenv('APP_SECRET', 'kali-secret-change-me').strip()
