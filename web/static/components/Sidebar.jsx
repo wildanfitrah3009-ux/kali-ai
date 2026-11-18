@@ -129,15 +129,28 @@ window.KalaAiComponents.Sidebar = function Sidebar({
           <button
             type="button"
             onClick={async () => {
-              try { await fetch('/auth/logout', { method: 'POST' }); } catch (e) {}
-              document.cookie = 'kali_user=; Max-Age=0; path=/';
-              document.cookie = 'kali_auth=; Max-Age=0; path=/';
+              if (!confirm('Hapus semua memori percakapan untuk sesi ini?')) return;
+              try {
+                const headers = { 'Content-Type': 'application/json' };
+                try {
+                  const k = localStorage.getItem('kali_api_key');
+                  if (k) headers['Authorization'] = 'Bearer ' + k;
+                } catch (e) {}
+                let sid = 'default';
+                try { sid = localStorage.getItem('kali_browser_id') || 'default'; } catch (e) {}
+                await fetch('/api/session/clear', {
+                  method: 'POST',
+                  headers,
+                  body: JSON.stringify({ session_id: sid }),
+                });
+              } catch (e) {}
+              try { localStorage.removeItem('kali_conversations'); } catch (e) {}
               window.location.reload();
             }}
             className="flex items-center gap-2 w-full text-xs text-muted px-2 py-2 rounded-lg hover:bg-hover hover:text-red-500 transition-colors mt-1"
           >
-            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-            <span className="truncate text-[13px] font-medium">Keluar</span>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+            <span className="truncate text-[13px] font-medium">Hapus Memori</span>
           </button>
         </div>
       </aside>
