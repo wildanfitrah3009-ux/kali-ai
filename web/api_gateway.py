@@ -31,6 +31,26 @@ def _auth(authorization: str | None = Header(default=None)):
     return gw.require_key(authorization)
 
 
+async def _run_with_fallback(msgs, system, temperature, max_tokens):
+    """Jalankan stream_fn berantai (fallback) seperti /api/chat di server.py."""
+    import server
+    last_err = None
+    for fn in server.STREAM_FNS:
+        sent_any = False
+        last_err = None
+        try:
+            async for delta in fn(msgs, system, temperature, max_tokens):
+                sent_any = True
+                yield delta
+            return
+        except Exception as e:
+            last_err = e
+            if sent_any:
+                break
+    if last_err is not None:
+        raise last_err
+
+
 class OAIMessage(BaseModel):
     role: str
     content: str
@@ -64,10 +84,7 @@ async def chat_completions(req: OAIRequest, request: Request, auth=Depends(_auth
     import server
 
     # rate-limit per key (rpm dari api_keys.json)
-    try:
-        gw.check_rate_limit(auth.get('key', ''), int(auth.get('rpm', 0) or 0))
-    except Exception:
-        raise
+    gw.check_rate_limit(auth.get('key', ''), int(auth.get('rpm', 0) or 0))
 
     msgs = server.prepare_messages([m.model_dump() for m in req.messages])
     if not msgs:
@@ -78,7 +95,10 @@ async def chat_completions(req: OAIRequest, request: Request, auth=Depends(_auth
     system = server.current_system_prompt()
 
     # --- cache (hanya untuk non-streaming) ---
-    ckey = gw.cache_key(server.MODEL, msgs, system)
+    # Tanggal di system prompt berubah tiap hari; buang bagian itu dari cache key
+    # agar cache tetap efektif dalam satu hari.
+    cache_system = system.split('Tanggal hari ini:')[0]
+    ckey = gw.cache_key(server.MODEL, msgs, cache_system)
     if not req.stream:
         cached = gw.cache_get(ckey)
         if cached is not None:
@@ -91,7 +111,7 @@ async def chat_completions(req: OAIRequest, request: Request, auth=Depends(_auth
         async def gen():
             collected = []
             try:
-                async for delta in server.STREAM_FNS[0](msgs, system, temperature, max_tokens):
+                async for delta in _run_with_fallback(msgs, system, temperature, max_tokens):
                     collected.append(delta)
                     chunk = {
                         'id': 'chatcmpl-webai',
@@ -114,7 +134,7 @@ async def chat_completions(req: OAIRequest, request: Request, auth=Depends(_auth
     # non-streaming
     collected = []
     try:
-        async for delta in server.STREAM_FNS[0](msgs, system, temperature, max_tokens):
+        async for delta in _run_with_fallback(msgs, system, temperature, max_tokens):
             collected.append(delta)
     except HTTPException as e:
         # teruskan status asli provider (401/402/429) + pesan ramah
