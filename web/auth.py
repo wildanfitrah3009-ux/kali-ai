@@ -43,14 +43,17 @@ def _has_oauth_session(request: Request) -> bool:
         return False
 
 
-def is_authed(request: Request) -> bool:
+def is_authed(request: Request, require: bool = False) -> bool:
     # Sesi login user (GitHub/lokal) dianggap sah lebih dulu.
     if _has_oauth_session(request):
         return True
-    if not auth_enabled():
-        return True
     tok = request.cookies.get('kali_auth') or request.headers.get('x-auth-token')
-    return bool(tok and verify_token(tok))
+    if tok and verify_token(tok):
+        return True
+    # Jika tidak ada kewajiban login, akses terbuka.
+    if not require:
+        return True
+    return False
 
 
 def require_auth(request: Request):

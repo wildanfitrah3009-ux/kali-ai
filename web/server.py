@@ -588,7 +588,7 @@ def auth_status(request: Request):
     oc = oauth.oauth_config()
     providers = [p for p, c in oc.items() if c['client_id'] and c['client_secret']]
     require_login = auth.auth_enabled() or len(providers) > 0
-    return {'auth_enabled': require_login, 'authed': auth.is_authed(request), 'providers': providers}
+    return {'auth_enabled': require_login, 'authed': auth.is_authed(request, require=require_login), 'providers': providers}
 
 
 def _redirect_base(request: Request) -> str:
@@ -720,7 +720,8 @@ def auth_local_login(req: dict):
 async def chat(request: Request, req: ChatRequest):
     _oc = oauth.oauth_config()
     _providers = [p for p, c in _oc.items() if c['client_id'] and c['client_secret']]
-    if (auth.auth_enabled() or _providers) and not auth.is_authed(request):
+    _require = auth.auth_enabled() or bool(_providers)
+    if not auth.is_authed(request, require=_require):
         raise HTTPException(401, 'Perlu login.')
     msgs = prepare_messages([m.model_dump() for m in req.messages])
     if not msgs:

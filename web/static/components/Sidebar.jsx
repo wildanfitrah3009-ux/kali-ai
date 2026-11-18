@@ -126,6 +126,19 @@ window.KalaAiComponents.Sidebar = function Sidebar({
             </div>
             <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title={t('connected')} />
           </button>
+          <button
+            type="button"
+            onClick={async () => {
+              try { await fetch('/auth/logout', { method: 'POST' }); } catch (e) {}
+              document.cookie = 'kali_user=; Max-Age=0; path=/';
+              document.cookie = 'kali_auth=; Max-Age=0; path=/';
+              window.location.reload();
+            }}
+            className="flex items-center gap-2 w-full text-xs text-muted px-2 py-2 rounded-lg hover:bg-hover hover:text-red-500 transition-colors mt-1"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+            <span className="truncate text-[13px] font-medium">Keluar</span>
+          </button>
         </div>
       </aside>
     </>
