@@ -135,6 +135,21 @@ window.KalaAiComponents.ChatMessage = React.memo(function ChatMessage({
             </button>
             {onRegenerate && (
               <>
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    const u = new SpeechSynthesisUtterance(message.content || '');
+                    u.lang = language === 'en' ? 'en-US' : language === 'ja' ? 'ja-JP' : language === 'zh' ? 'zh-CN' : language === 'ko' ? 'ko-KR' : 'id-ID';
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(u);
+                  } catch (e) {}
+                }}
+                title="Putar suara"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-card hover:bg-hover text-[11px] text-muted hover:text-ink transition-colors"
+              >
+                <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
+              </button>
               <button type="button" onClick={onRegenerate} title={window.getKaliText ? window.getKaliText('regenerate', language) : 'Ulangi Jawaban'} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-card hover:bg-hover text-[11px] text-muted hover:text-ink transition-colors ml-1">
                 <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /></svg>
                 <span>Ulangi</span>

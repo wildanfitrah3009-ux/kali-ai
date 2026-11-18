@@ -1,0 +1,12 @@
+{
+  "name": "webai-ui-build",
+  "private": true,
+  "scripts": {
+    "build:ui": "babel --config-file ./babel.config.json static/components --out-dir static/dist/components --extensions .jsx && babel --config-file ./babel.config.json static/App.jsx --out-file static/dist/App.js"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.0",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-react": "^7.24.0"
+  }
+}

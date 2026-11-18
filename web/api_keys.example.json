@@ -1,0 +1,11 @@
+{
+  "keys": [
+    {
+      "key": "wai_demo_REPLACE_ME",
+      "name": "demo-user",
+      "plan": "free",
+      "rpm": 10,
+      "active": true
+    }
+  ]
+}
