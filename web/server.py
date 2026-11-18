@@ -561,18 +561,18 @@ async def upload(request: Request):
 
 
 @app.get('/api/profile')
-def get_profile(session_id: str = 'default'):
+def get_profile(session_id: str = 'default', _key=Depends(_require_api_key)):
     return features.load_profile(session_id)
 
 
 @app.post('/api/profile')
-def set_profile(req: dict):
+def set_profile(req: dict, _key=Depends(_require_api_key)):
     sid = (req or {}).get('session_id', 'default')
     return features.save_profile(sid, req or {})
 
 
 @app.post('/api/session/clear')
-def session_clear(req: dict):
+def session_clear(req: dict, _key=Depends(_require_api_key)):
     """Hapus memori satu sesi."""
     sid = (req or {}).get('session_id', 'default')
     try:
