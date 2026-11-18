@@ -24,7 +24,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -39,6 +39,8 @@ PROVIDER = os.getenv('AI_PROVIDER', 'openai').lower()
 
 import features
 import auth
+import oauth
+from fastapi.responses import RedirectResponse
 
 def _rate_key(request: Request) -> str:
     """Rate-limit per-sesi (header X-Session-Id) dengan fallback ke IP."""
@@ -46,6 +48,12 @@ def _rate_key(request: Request) -> str:
     if sid:
         return 'sess:' + sid[:64]
     return 'ip:' + get_remote_address(request)
+
+
+try:
+    oauth.init_db()
+except Exception:
+    pass
 
 
 limiter = Limiter(key_func=_rate_key)
@@ -577,7 +585,133 @@ async def login(request: Request):
 
 @app.get('/api/auth-status')
 def auth_status(request: Request):
-    return {'auth_enabled': auth.auth_enabled(), 'authed': auth.is_authed(request)}
+    oc = oauth.oauth_config()
+    providers = [p for p, c in oc.items() if c['client_id'] and c['client_secret']]
+    return {'auth_enabled': auth.auth_enabled(), 'authed': auth.is_authed(request), 'providers': providers}
+
+
+def _redirect_base(request: Request) -> str:
+    base = os.getenv('OAUTH_REDIRECT_BASE', '').strip()
+    if base:
+        return base.rstrip('/')
+    return str(request.base_url).rstrip('/')
+
+
+def _set_session_and_go(uid: int):
+    resp = RedirectResponse(url='/')
+    resp.set_cookie('kali_user', oauth.make_session(uid), httponly=True, samesite='lax', max_age=30*24*3600)
+    return resp
+
+
+@app.get('/auth/google')
+def auth_google(request: Request):
+    cfg = oauth.oauth_config()['google']
+    if not cfg['client_id']:
+        raise HTTPException(400, 'Google OAuth belum dikonfigurasi.')
+    state = oauth.make_state()
+    redirect_uri = _redirect_base(request) + '/auth/google/callback'
+    from urllib.parse import urlencode
+    q = urlencode({'client_id': cfg['client_id'], 'redirect_uri': redirect_uri, 'response_type': 'code', 'scope': cfg['scope'], 'state': state, 'access_type': 'online'})
+    return RedirectResponse(cfg['auth_url'] + '?' + q)
+
+
+@app.get('/auth/google/callback')
+async def auth_google_cb(request: Request, code: str = '', state: str = ''):
+    if not oauth.verify_state(state):
+        raise HTTPException(400, 'State tidak valid.')
+    cfg = oauth.oauth_config()['google']
+    redirect_uri = _redirect_base(request) + '/auth/google/callback'
+    async with httpx.AsyncClient(timeout=20) as client:
+        tr = await client.post(cfg['token_url'], data={'code': code, 'client_id': cfg['client_id'], 'client_secret': cfg['client_secret'], 'redirect_uri': redirect_uri, 'grant_type': 'authorization_code'})
+        tok = tr.json().get('access_token')
+        if not tok:
+            raise HTTPException(400, 'Gagal tukar token Google.')
+        ur = await client.get('https://www.googleapis.com/oauth2/v2/userinfo', headers={'Authorization': 'Bearer ' + tok})
+        info = ur.json()
+    uid = oauth.upsert_user('google', str(info.get('id')), info.get('email', ''), info.get('name', ''), info.get('picture', ''))
+    return _set_session_and_go(uid['id'])
+
+
+@app.get('/auth/github')
+def auth_github(request: Request):
+    cfg = oauth.oauth_config()['github']
+    if not cfg['client_id']:
+        raise HTTPException(400, 'GitHub OAuth belum dikonfigurasi.')
+    state = oauth.make_state()
+    redirect_uri = _redirect_base(request) + '/auth/github/callback'
+    from urllib.parse import urlencode
+    q = urlencode({'client_id': cfg['client_id'], 'redirect_uri': redirect_uri, 'scope': cfg['scope'], 'state': state})
+    return RedirectResponse(cfg['auth_url'] + '?' + q)
+
+
+@app.get('/auth/github/callback')
+async def auth_github_cb(request: Request, code: str = '', state: str = ''):
+    if not oauth.verify_state(state):
+        raise HTTPException(400, 'State tidak valid.')
+    cfg = oauth.oauth_config()['github']
+    redirect_uri = _redirect_base(request) + '/auth/github/callback'
+    async with httpx.AsyncClient(timeout=20) as client:
+        tr = await client.post(cfg['token_url'], data={'code': code, 'client_id': cfg['client_id'], 'client_secret': cfg['client_secret'], 'redirect_uri': redirect_uri}, headers={'Accept': 'application/json'})
+        tok = tr.json().get('access_token')
+        if not tok:
+            raise HTTPException(400, 'Gagal tukar token GitHub.')
+        h = {'Authorization': 'Bearer ' + tok, 'Accept': 'application/json'}
+        ur = await client.get('https://api.github.com/user', headers=h)
+        info = ur.json()
+        email = info.get('email')
+        if not email:
+            er = await client.get('https://api.github.com/user/emails', headers=h)
+            try:
+                ems = er.json()
+                prim = next((e for e in ems if e.get('primary')), ems[0] if ems else None)
+                email = prim.get('email') if prim else ''
+            except Exception:
+                email = ''
+    uid = oauth.upsert_user('github', str(info.get('id')), email or '', info.get('name') or info.get('login') or '', info.get('avatar_url') or '')
+    return _set_session_and_go(uid['id'])
+
+
+@app.get('/auth/me')
+def auth_me(request: Request):
+    tok = request.cookies.get('kali_user')
+    uid = oauth.verify_session(tok) if tok else None
+    if not uid:
+        return {'user': None}
+    u = oauth.get_user(uid)
+    return {'user': {'id': u['id'], 'name': u['name'], 'email': u['email'], 'avatar': u['avatar']} if u else None}
+
+
+@app.post('/auth/logout')
+def auth_logout():
+    resp = JSONResponse({'ok': True})
+    resp.delete_cookie('kali_user')
+    return resp
+
+
+def _set_session_json(uid: int):
+    resp = JSONResponse({'ok': True})
+    resp.set_cookie('kali_user', oauth.make_session(uid), httponly=True, samesite='lax', max_age=30*24*3600)
+    return resp
+
+
+@app.post('/auth/register')
+def auth_register(req: dict):
+    email = (req or {}).get('email', '').strip()
+    pw = (req or {}).get('password', '')
+    if not email or len(pw) < 6:
+        raise HTTPException(400, 'Email wajib & password minimal 6 karakter.')
+    u = oauth.create_local_user(email, pw, (req or {}).get('name', ''))
+    if not u:
+        raise HTTPException(400, 'Email sudah terdaftar.')
+    return _set_session_json(u['id'])
+
+
+@app.post('/auth/local-login')
+def auth_local_login(req: dict):
+    u = oauth.verify_local((req or {}).get('email', '').strip(), (req or {}).get('password', ''))
+    if not u:
+        raise HTTPException(401, 'Email atau password salah.')
+    return _set_session_json(u['id'])
 
 
 @app.post('/api/chat')

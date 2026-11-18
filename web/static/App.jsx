@@ -46,9 +46,18 @@ function App() {
   // --- Autentikasi ---
   const [authState, setAuthState] = useState({ loading: true, enabled: false, authed: true });
   const [loginPw, setLoginPw] = useState('');
+  const [oauthUser, setOauthUser] = useState(null);
+  const [providers, setProviders] = useState([]);
   useEffect(() => {
-    fetch('/api/auth-status').then((r) => r.json()).then((j) => {
-      setAuthState({ loading: false, enabled: !!j.auth_enabled, authed: !!j.authed });
+    Promise.all([
+      fetch('/api/auth-status').then((r) => r.json()).catch(() => ({})),
+      fetch('/auth/me').then((r) => r.json()).catch(() => ({ user: null })),
+    ]).then(([st, me]) => {
+      const user = me && me.user ? me.user : null;
+      setOauthUser(user);
+      setProviders((st && st.providers) || []);
+      const loggedIn = !!user || !!st.authed;
+      setAuthState({ loading: false, enabled: !!st.auth_enabled || ((st.providers || []).length > 0), authed: loggedIn });
     }).catch(() => setAuthState({ loading: false, enabled: false, authed: true }));
   }, []);
   const doLogin = async (e) => {
@@ -490,19 +499,31 @@ function App() {
     return <div className="h-screen w-screen flex items-center justify-center text-muted text-sm">Memuat...</div>;
   }
   if (authState.enabled && !authState.authed) {
+    const btn = 'w-full py-2 rounded-lg text-sm font-medium border border-border bg-card hover:bg-hover text-ink transition-colors';
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-surface">
-        <form onSubmit={doLogin} className="p-6 rounded-2xl border border-border bg-card shadow-sm w-[320px] space-y-3">
-          <h2 className="text-lg font-semibold text-ink">Masuk ke Kali AI</h2>
-          <input
-            type="password"
-            value={loginPw}
-            onChange={(e) => setLoginPw(e.target.value)}
-            placeholder="Password"
-            className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm text-ink focus:outline-none focus:border-accent"
-          />
-          <button type="submit" className="w-full py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover">Masuk</button>
-        </form>
+        <div className="p-6 rounded-2xl border border-border bg-card shadow-sm w-[340px] space-y-3">
+          <h2 className="text-lg font-semibold text-ink text-center">Masuk ke Kali AI</h2>
+          {providers.includes('google') && (
+            <a href="/auth/google" className={btn}>Masuk dengan Google</a>
+          )}
+          {providers.includes('github') && (
+            <a href="/auth/github" className={btn}>Masuk dengan GitHub</a>
+          )}
+          {(providers.length > 0) && <div className="text-center text-xs text-muted">atau</div>}
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              const r = await fetch('/auth/local-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: loginPw.email || '', password: loginPw.pw || '' }) });
+              if (r.ok || r.redirected) { const me = await fetch('/auth/me').then((x) => x.json()); setOauthUser(me.user); setAuthState((s) => ({ ...s, authed: !!me.user })); }
+              else alert('Email atau password salah.');
+            } catch (err) { alert('Gagal: ' + err.message); }
+          }} className="space-y-2">
+            <input type="email" placeholder="Email" defaultValue="" onChange={(e) => setLoginPw((p) => ({ ...(p || {}), email: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm text-ink focus:outline-none focus:border-accent" />
+            <input type="password" placeholder="Password" onChange={(e) => setLoginPw((p) => ({ ...(p || {}), pw: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-border bg-transparent text-sm text-ink focus:outline-none focus:border-accent" />
+            <button type="submit" className="w-full py-2 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover">Masuk</button>
+          </form>
+        </div>
       </div>
     );
   }
