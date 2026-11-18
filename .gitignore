@@ -23,3 +23,6 @@ Thumbs.db
 # Node
 node_modules/
 package-lock.json
+
+# Build output (Babel)
+web/static/dist/

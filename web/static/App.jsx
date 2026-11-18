@@ -18,6 +18,19 @@ function uid(prefix) {
   return (prefix || 'id') + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
 }
 
+function browserId() {
+  try {
+    let id = localStorage.getItem('kali_browser_id');
+    if (!id) {
+      id = 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem('kali_browser_id', id);
+    }
+    return id;
+  } catch (e) {
+    return 'anon';
+  }
+}
+
 function App() {
   const C = window.KalaAiComponents || {};
   const { Header, Sidebar, ZeroState, ChatMessage, PromptInputBox, CanvasWorkspace, PersonaModal, KalaAiLiveOverlay, LandingView, SettingsModal } = C;
@@ -239,13 +252,13 @@ function App() {
     try {
       const resp = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Session-Id': convoId || 'default' },
+        headers: { 'Content-Type': 'application/json', 'X-Session-Id': browserId() },
         body: JSON.stringify({
           messages: history,
           search: searchEnabled,
           mode: thinkingEnabled ? 'thinking' : 'fast',
           language,
-          session_id: convoId || 'default',
+          session_id: browserId(),
           attachments: (attachments || []).map((a) => a.extracted).filter(Boolean),
           profile: (() => {
             try { return JSON.parse(localStorage.getItem('kali_profile') || '{}'); } catch (e) { return {}; }
